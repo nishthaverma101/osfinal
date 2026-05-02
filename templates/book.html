@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Book Appointment - Hospital Management System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --primary-color: #667eea;
+      --secondary-color: #764ba2;
+      --shadow-md: 0 8px 24px rgba(0,0,0,0.12);
+      --shadow-lg: 0 16px 48px rgba(0,0,0,0.16);
+    }
+    
+    body { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      position: relative;
+      overflow-x: hidden;
+    }
+    
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 50%, rgba(255,255,255,0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 50% 20%, rgba(255,255,255,0.08) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+      animation: pulse 8s ease-in-out infinite;
+    }
+    
+    body::after {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: 
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px);
+      pointer-events: none;
+      z-index: 0;
+      animation: rotate 20s linear infinite;
+    }
+    
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .booking-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(30px);
+      border-radius: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5);
+      padding: 60px;
+      margin: 50px auto;
+      max-width: 950px;
+      position: relative;
+      z-index: 1;
+      border: 2px solid rgba(255,255,255,0.4);
+      overflow: hidden;
+    }
+    
+    .booking-container::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(102, 126, 234, 0.15) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: float 12s ease-in-out infinite;
+      z-index: 0;
+    }
+    
+    .booking-container::after {
+      content: '';
+      position: absolute;
+      bottom: -30%;
+      left: -30%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(118, 75, 162, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: float 15s ease-in-out infinite reverse;
+      z-index: 0;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(30px, -30px) scale(1.1); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    
+    .step-indicator {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 40px;
+      position: relative;
+    }
+    
+    .step {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: #e9ecef;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 10px;
+      font-weight: bold;
+      color: #6c757d;
+      transition: all 0.3s ease;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      z-index: 2;
+    }
+    
+    .step.active {
+      background: var(--primary-gradient);
+      color: white;
+      transform: scale(1.1);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .step.completed {
+      background: #28a745;
+      color: white;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .step-line {
+      width: 60px;
+      height: 3px;
+      background: #e9ecef;
+      margin: 0 5px;
+      align-self: center;
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+    
+    .step-line.completed {
+      background: #28a745;
+      box-shadow: 0 0 10px rgba(40, 167, 69, 0.3);
+    }
+    .form-section {
+      display: none;
+    }
+    .form-section.active {
+      display: block;
+    }
+    .patient-card {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      border-radius: 20px;
+      padding: 25px;
+      margin: 25px 0;
+      border-left: 5px solid var(--primary-color);
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+    }
+    
+    .patient-card:hover {
+      transform: translateX(5px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .doctor-card {
+      border: 2px solid #e9ecef;
+      border-radius: 20px;
+      padding: 25px;
+      margin: 15px 0;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: white;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .doctor-card:hover {
+      border-color: var(--primary-color);
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-lg);
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    }
+    
+    .doctor-card.selected {
+      border-color: var(--primary-color);
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .time-slot {
+      border: 2px solid #dee2e6;
+      border-radius: 12px;
+      padding: 12px 20px;
+      margin: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-block;
+      min-width: 100px;
+      text-align: center;
+      font-weight: 600;
+      background: white;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .time-slot:hover {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      border-color: var(--primary-color);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .time-slot.selected {
+      background: var(--primary-gradient);
+      color: white;
+      border-color: var(--primary-color);
+      box-shadow: var(--shadow-md);
+      transform: scale(1.05);
+    }
+    
+    .time-slot.booked {
+      background: #f8d7da;
+      color: #721c24;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    
+    .btn-custom {
+      background: var(--primary-gradient);
+      border: none;
+      color: white;
+      padding: 14px 40px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn-custom::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+    
+    .btn-custom:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+    
+    .btn-custom:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+      color: white;
+    }
+    
+    .otp-input {
+      letter-spacing: 15px;
+      font-size: 2rem;
+      text-align: center;
+      font-weight: bold;
+      border: 3px solid #e9ecef;
+      border-radius: 16px;
+      padding: 20px;
+      transition: all 0.3s ease;
+    }
+    
+    .otp-input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+      transform: scale(1.02);
+    }
+    
+    .form-control, .form-select {
+      border-radius: 12px;
+      border: 2px solid #e9ecef;
+      padding: 0.75rem 1rem;
+      transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+      transform: translateY(-2px);
+    }
+    
+    @media (max-width: 768px) {
+      .booking-container {
+        padding: 30px 20px;
+        margin: 20px auto;
+        border-radius: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="booking-container">
+      <div class="text-center mb-4">
+        <h2><i class="fas fa-calendar-plus me-2"></i>Book Your Appointment</h2>
+        <p class="text-muted">Quick and easy appointment booking system</p>
+      </div>
+
+      <!-- Step Indicator -->
+      <div class="step-indicator">
+        <div class="step {{ 'active' if step == 1 else 'completed' if step > 1 else '' }}" id="step1">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="step-line {{ 'completed' if step > 1 else '' }}"></div>
+        <div class="step {{ 'active' if step == 2 else 'completed' if step > 2 else '' }}" id="step2">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <div class="step-line {{ 'completed' if step > 2 else '' }}"></div>
+        <div class="step {{ 'active' if step == 3 else 'completed' if step > 3 else '' }}" id="step3">
+          <i class="fas fa-user-md"></i>
+        </div>
+        <div class="step-line {{ 'completed' if step > 3 else '' }}"></div>
+        <div class="step {{ 'active' if step == 4 else '' }}" id="step4">
+          <i class="fas fa-check"></i>
+        </div>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, msg in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show">
+              <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' if category == 'warning' else 'times-circle' if category == 'danger' else 'info-circle' }} me-2"></i>
+              {{ msg }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Step 1: Contact Information -->
+      <div class="form-section {{ 'active' if step == 1 else '' }}" id="section1">
+        <h4><i class="fas fa-phone me-2"></i>Enter Your Contact Information</h4>
+        <p class="text-muted">We'll send you an OTP to verify your identity</p>
+        
+        <form method="POST">
+          <input type="hidden" name="step" value="start" />
+          <div class="row justify-content-center">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Mobile Number</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                <input type="tel" name="mobile" class="form-control" placeholder="e.g., 9876543210" 
+                       value="{{ session.get('booking_mobile', '') }}" required />
+              </div>
+              <small class="text-muted">We'll send OTP to this number for verification</small>
+            </div>
+          </div>
+          <div class="text-center">
+            <button type="submit" class="btn btn-custom btn-lg">
+              <i class="fas fa-paper-plane me-2"></i>Send OTP
+            </button>
+            <a href="/" class="btn btn-outline-secondary btn-lg ms-2">
+              <i class="fas fa-home me-2"></i>Home
+            </a>
+          </div>
+        </form>
+      </div>
+
+      <!-- Step 2: OTP Verification -->
+      <div class="form-section {{ 'active' if step == 2 else '' }}" id="section2">
+        <h4><i class="fas fa-shield-alt me-2"></i>Verify Your Identity</h4>
+        <p class="text-muted">Enter the OTP sent to your mobile number</p>
+        
+        <div class="row justify-content-center">
+          <div class="col-md-6">
+            <div class="patient-card">
+              <h6><i class="fas fa-mobile-alt me-2"></i>Mobile: {{ session.get('booking_mobile', '') }}</h6>
+              <small class="text-muted">Check your SMS for the OTP</small>
+            </div>
+          </div>
+        </div>
+
+        <form method="POST">
+          <input type="hidden" name="step" value="verify" />
+          <div class="mb-3">
+            <label class="form-label">Enter OTP</label>
+            <input type="text" name="otp" class="form-control otp-input" maxlength="6" 
+                   placeholder="000000" required autocomplete="off" />
+          </div>
+          {% if debug_otp %}
+          <div class="alert alert-warning" style="border-left: 4px solid #ffc107;">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>⚠️ SMS Not Configured:</strong> OTP is {{ debug_otp }}<br>
+            <small class="mt-2 d-block">
+              <strong>📱 To receive OTP on your phone (3 steps):</strong><br>
+              <strong>Option 1 - EASIEST:</strong> Run <code>python setup_sms.py</code> in your terminal<br>
+              <strong>Option 2 - Manual:</strong><br>
+              &nbsp;&nbsp;1. Sign up at <a href="https://www.twilio.com/try-twilio" target="_blank" class="fw-bold">twilio.com</a> (FREE trial)<br>
+              &nbsp;&nbsp;2. Get Account SID, Auth Token, and Phone Number<br>
+              &nbsp;&nbsp;3. Update <code>otp_config.py</code> with your credentials<br>
+              &nbsp;&nbsp;4. Verify your phone in Twilio Console (for trial accounts)<br>
+              &nbsp;&nbsp;5. Restart your app<br>
+              <br>
+              <strong>📖 See:</strong> <code>QUICK_FIX_SMS.md</code> or <code>START_HERE_SMS.md</code> for detailed steps
+            </small>
+          </div>
+          {% endif %}
+          <div class="text-center">
+            <button type="submit" class="btn btn-custom btn-lg">
+              <i class="fas fa-check me-2"></i>Verify OTP
+            </button>
+            <a href="/book" class="btn btn-outline-secondary btn-lg ms-2">
+              <i class="fas fa-redo me-2"></i>Resend OTP
+            </a>
+          </div>
+        </form>
+      </div>
+
+      <!-- Step 3: Select Doctor & Time -->
+      <div class="form-section {{ 'active' if step == 3 else '' }}" id="section3">
+        <h4><i class="fas fa-user-md me-2"></i>Select Doctor & Time Slot</h4>
+        <p class="text-muted">Choose your preferred doctor and available time slot</p>
+
+        {% if patient_info %}
+        <div class="patient-card">
+          <h5><i class="fas fa-user me-2"></i>Patient Information</h5>
+          <div class="row">
+            <div class="col-md-6">
+              <strong>Name:</strong> {{ patient_info.first_name }} {{ patient_info.last_name }}<br>
+              <strong>Patient ID:</strong> {{ patient_info.patient_id }}
+            </div>
+            <div class="col-md-6">
+              <strong>DOB:</strong> {{ patient_info.date_of_birth }}<br>
+              <strong>Insurance:</strong> {{ patient_info.insurance_provider }}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <form method="POST" id="bookingForm">
+          <input type="hidden" name="step" value="finish" />
+          <input type="hidden" name="patient_id" value="{{ patient_info.patient_id if patient_info else '' }}" />
+          
+          <div class="mb-4">
+            <h5><i class="fas fa-user-md me-2"></i>Select Doctor</h5>
+            <div class="row">
+              {% for doctor in doctors %}
+              <div class="col-md-6 mb-3">
+                <div class="doctor-card" onclick="selectDoctor('{{ doctor.doctor_id }}', '{{ doctor.first_name }} {{ doctor.last_name }}')">
+                  <div class="d-flex align-items-center">
+                    <div class="me-3">
+                      <i class="fas fa-user-md fa-2x text-primary"></i>
+                    </div>
+                    <div>
+                      <h6 class="mb-1">Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h6>
+                      <small class="text-muted">{{ doctor.specialization if doctor.specialization else 'General Medicine' }}</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            <input type="hidden" name="doctor_id" id="selected_doctor_id" required />
+          </div>
+
+          <div class="mb-4">
+            <h5><i class="fas fa-calendar me-2"></i>Select Date</h5>
+            <input type="date" name="appointment_date" class="form-control" id="appointment_date" 
+                   min="{{ today }}" required />
+          </div>
+
+          <div class="mb-4">
+            <h5><i class="fas fa-clock me-2"></i>Select Time Slot</h5>
+            <div id="time_slots">
+              <p class="text-muted">Please select a doctor and date first</p>
+            </div>
+            <input type="hidden" name="appointment_time" id="selected_time" required />
+          </div>
+
+          <div class="mb-4">
+            <h5><i class="fas fa-stethoscope me-2"></i>Reason for Visit</h5>
+            <textarea name="reason_for_visit" class="form-control" rows="3" 
+                      placeholder="Please describe your symptoms or reason for the appointment..."></textarea>
+          </div>
+
+          <div class="text-center">
+            <button type="submit" class="btn btn-custom btn-lg" id="bookBtn" disabled>
+              <i class="fas fa-calendar-check me-2"></i>Book Appointment
+            </button>
+            <a href="/book" class="btn btn-outline-secondary btn-lg ms-2">
+              <i class="fas fa-arrow-left me-2"></i>Back
+            </a>
+          </div>
+        </form>
+      </div>
+
+      <!-- Step 4: Confirmation -->
+      <div class="form-section {{ 'active' if step == 4 else '' }}" id="section4">
+        <div class="text-center">
+          <div class="mb-4">
+            <i class="fas fa-check-circle fa-5x text-success"></i>
+          </div>
+          <h3 class="text-success">Appointment Booked Successfully!</h3>
+          <p class="text-muted">Your appointment has been confirmed</p>
+          
+          <div class="patient-card">
+            <h5>Appointment Details</h5>
+            <div class="row">
+              <div class="col-md-6">
+                <strong>Appointment ID:</strong> {{ appointment_id }}<br>
+                <strong>Date:</strong> {{ appointment_date }}<br>
+                <strong>Time:</strong> {{ appointment_time }}
+              </div>
+              <div class="col-md-6">
+                <strong>Doctor:</strong> Dr. {{ doctor_name }}<br>
+                <strong>Patient:</strong> {{ patient_name }}<br>
+                <strong>Status:</strong> <span class="badge bg-success">Scheduled</span>
+              </div>
+            </div>
+          </div>
+
+          {% if patient_details %}
+          <div class="mt-4">
+            <button type="button" class="btn btn-outline-primary btn-lg" data-bs-toggle="modal" data-bs-target="#patientDetailsModal">
+              <i class="fas fa-user me-2"></i>View Patient Details
+            </button>
+          </div>
+          
+          <!-- Patient Details Modal -->
+          <div class="modal fade" id="patientDetailsModal" tabindex="-1" aria-labelledby="patientDetailsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="patientDetailsModalLabel">
+                    <i class="fas fa-user me-2"></i>Patient Details
+                  </h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <strong>Name:</strong><br>
+                      {{ patient_details.get('first_name', '') }} {{ patient_details.get('last_name', '') }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <strong>Gender:</strong><br>
+                      {{ patient_details.get('gender', 'N/A') }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <strong>Mobile Number:</strong><br>
+                      {{ patient_details.get('contact_number', 'N/A') }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <strong>Email:</strong><br>
+                      {{ patient_details.get('email', 'N/A') }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <strong>Date of Birth:</strong><br>
+                      {{ patient_details.get('date_of_birth', 'N/A') }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <strong>Patient ID:</strong><br>
+                      {{ patient_details.get('patient_id', 'N/A') }}
+                    </div>
+                    {% if patient_details.get('address') %}
+                    <div class="col-12 mb-3">
+                      <strong>Address:</strong><br>
+                      {{ patient_details.get('address', 'N/A') }}
+                    </div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+          
+          <div class="mt-4">
+            <a href="/patient/{{ patient_id }}" class="btn btn-custom btn-lg">
+              <i class="fas fa-tachometer-alt me-2"></i>View Dashboard
+            </a>
+            <a href="/book" class="btn btn-outline-primary btn-lg ms-2">
+              <i class="fas fa-plus me-2"></i>Book Another
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let selectedDoctor = null;
+    let selectedTime = null;
+    let availableSlots = [];
+
+    function selectDoctor(doctorId, doctorName) {
+      selectedDoctor = doctorId;
+      document.getElementById('selected_doctor_id').value = doctorId;
+      
+      // Update UI
+      document.querySelectorAll('.doctor-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      event.currentTarget.classList.add('selected');
+      
+      // Load time slots if date is selected
+      const date = document.getElementById('appointment_date').value;
+      if (date) {
+        loadTimeSlots(doctorId, date);
+      }
+      
+      updateBookButton();
+    }
+
+    function selectTime(time) {
+      selectedTime = time;
+      document.getElementById('selected_time').value = time;
+      
+      // Update UI
+      document.querySelectorAll('.time-slot').forEach(slot => {
+        slot.classList.remove('selected');
+      });
+      event.currentTarget.classList.add('selected');
+      
+      updateBookButton();
+    }
+
+    function updateBookButton() {
+      const bookBtn = document.getElementById('bookBtn');
+      if (selectedDoctor && selectedTime) {
+        bookBtn.disabled = false;
+      } else {
+        bookBtn.disabled = true;
+      }
+    }
+
+    function loadTimeSlots(doctorId, date) {
+      // Generate time slots (9 AM to 5 PM, 30-minute intervals)
+      const slots = [];
+      for (let hour = 9; hour < 17; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+          slots.push(time);
+        }
+      }
+      
+      // Display time slots
+      const container = document.getElementById('time_slots');
+      container.innerHTML = '';
+      
+      slots.forEach(time => {
+        const slot = document.createElement('div');
+        slot.className = 'time-slot';
+        slot.textContent = time;
+        slot.onclick = () => selectTime(time);
+        container.appendChild(slot);
+      });
+    }
+
+    // Load time slots when date changes
+    document.getElementById('appointment_date').addEventListener('change', function() {
+      if (selectedDoctor) {
+        loadTimeSlots(selectedDoctor, this.value);
+      }
+    });
+
+    // Set minimum date to today
+    document.getElementById('appointment_date').min = new Date().toISOString().split('T')[0];
+  </script>
+</body>
+</html>
+
+

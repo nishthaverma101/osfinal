@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Patient Registration - Hospital Management System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --primary-color: #667eea;
+      --secondary-color: #764ba2;
+      --shadow-md: 0 8px 24px rgba(0,0,0,0.12);
+      --shadow-lg: 0 16px 48px rgba(0,0,0,0.16);
+    }
+    
+    body { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      position: relative;
+      overflow-x: hidden;
+    }
+    
+    .registration-container {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      box-shadow: var(--shadow-lg);
+      padding: 50px;
+      margin: 40px auto;
+      max-width: 850px;
+      position: relative;
+      z-index: 1;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    
+    .section-title {
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 700;
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+    }
+    
+    .form-section {
+      display: none;
+    }
+    
+    .form-section.active {
+      display: block;
+    }
+    
+    .btn-custom {
+      background: var(--primary-gradient);
+      border: none;
+      color: white;
+      padding: 14px 40px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    
+    .alert-info {
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="registration-container">
+      <div class="text-center mb-4">
+        <h2 class="section-title">
+          <i class="fas fa-user-plus me-2"></i>Patient Registration
+        </h2>
+        <p class="text-muted">Register as a new patient to book appointments</p>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, msg in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show">
+              <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' if category == 'warning' else 'times-circle' if category == 'danger' else 'info-circle' }} me-2"></i>
+              {{ msg }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Step 1: Enter Mobile Number -->
+      {% if step == 1 or not step %}
+      <div class="form-section active" id="section1">
+        <h4><i class="fas fa-phone me-2"></i>Enter Your Mobile Number</h4>
+        <p class="text-muted">We'll send an OTP to verify your mobile number</p>
+        
+        <form method="POST">
+          <input type="hidden" name="step" value="init" />
+          <div class="mb-3">
+            <label class="form-label">Contact Number *</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-phone"></i></span>
+              <input type="tel" name="contact_number" class="form-control" placeholder="e.g., 9876543210" required />
+            </div>
+            <small class="text-muted">We'll send OTP to this number for verification</small>
+          </div>
+          <div class="text-center">
+            <button type="submit" class="btn btn-custom btn-lg">
+              <i class="fas fa-paper-plane me-2"></i>Send OTP
+            </button>
+            <a href="/lookup" class="btn btn-outline-primary btn-lg ms-2">
+              <i class="fas fa-search me-2"></i>Already Registered?
+            </a>
+            <a href="/" class="btn btn-outline-secondary btn-lg ms-2">
+              <i class="fas fa-home me-2"></i>Home
+            </a>
+          </div>
+        </form>
+      </div>
+      {% endif %}
+
+      <!-- Step 2: Verify OTP -->
+      {% if step == 2 %}
+      <div class="form-section active" id="section2">
+        <h4><i class="fas fa-shield-alt me-2"></i>Verify OTP</h4>
+        <p class="text-muted">Enter the OTP sent to your mobile number</p>
+        
+        <form method="POST">
+          <input type="hidden" name="step" value="verify" />
+          <div class="mb-3">
+            <label class="form-label">Enter OTP</label>
+            <input type="text" name="otp" class="form-control" maxlength="6" placeholder="000000" required autocomplete="off" />
+            <small class="text-muted">OTP sent to your mobile number</small>
+          </div>
+          {% if debug_otp %}
+          <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>⚠️ SMS Not Configured:</strong> OTP is {{ debug_otp }}<br>
+            <small class="mt-2 d-block">
+              <strong>To receive OTP on your phone:</strong><br>
+              1. Sign up at <a href="https://www.twilio.com/try-twilio" target="_blank">twilio.com</a> (FREE trial)<br>
+              2. Get your Account SID, Auth Token, and Phone Number<br>
+              3. Update <code>otp_config.py</code> with your credentials<br>
+              4. Run: <code>pip install twilio</code><br>
+              5. See <code>ENABLE_SMS_NOW.md</code> for detailed steps
+            </small>
+          </div>
+          {% endif %}
+          <div class="text-center">
+            <button type="submit" class="btn btn-custom btn-lg">
+              <i class="fas fa-check me-2"></i>Verify OTP
+            </button>
+            <a href="/register" class="btn btn-outline-secondary btn-lg ms-2">
+              <i class="fas fa-redo me-2"></i>Resend OTP
+            </a>
+          </div>
+        </form>
+      </div>
+      {% endif %}
+
+      <!-- Step 3: Complete Registration -->
+      {% if step == 3 %}
+      <div class="form-section active" id="section3">
+        <h4><i class="fas fa-user-plus me-2"></i>Complete Your Registration</h4>
+        <p class="text-muted">Fill in your details to complete registration</p>
+        
+        <form method="POST">
+          <input type="hidden" name="step" value="complete" />
+          
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">First Name *</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                <input type="text" name="first_name" class="form-control" placeholder="Enter first name" required />
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Last Name *</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                <input type="text" name="last_name" class="form-control" placeholder="Enter last name" required />
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Gender *</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-venus-mars"></i></span>
+                <select name="gender" class="form-select" required>
+                  <option value="">Select Gender</option>
+                  <option value="M">Male</option>
+                  <option value="F">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Date of Birth *</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                <input type="date" name="date_of_birth" class="form-control" required />
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Contact Number *</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                <input type="tel" name="contact_number" class="form-control" value="{{ mobile }}" readonly />
+              </div>
+              <small class="text-muted">Verified mobile number</small>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Email Address *</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                <input type="email" name="email" class="form-control" placeholder="e.g., john@example.com" required />
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Address</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+              <textarea name="address" class="form-control" rows="3" placeholder="Enter your complete address"></textarea>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Insurance Provider</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-shield-alt"></i></span>
+                <input type="text" name="insurance_provider" class="form-control" placeholder="e.g., HealthCare Plus" />
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Insurance Number</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                <input type="text" name="insurance_number" class="form-control" placeholder="e.g., INS123456" />
+              </div>
+            </div>
+          </div>
+
+          <div class="text-center">
+            <button type="submit" class="btn btn-custom btn-lg">
+              <i class="fas fa-user-plus me-2"></i>Register Patient
+            </button>
+            <a href="/" class="btn btn-outline-secondary btn-lg ms-2">
+              <i class="fas fa-home me-2"></i>Home
+            </a>
+          </div>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Set maximum date to today for date of birth
+    const dobInput = document.querySelector('input[name="date_of_birth"]');
+    if (dobInput) {
+      const today = new Date().toISOString().split('T')[0];
+      dobInput.max = today;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+doctor_id,patient_id,report_id,test_name,result,date,priority,status,notes,created_at,file_path
+D001,P001,R1001,Complete Blood Count,Normal,2025-10-15,,,,,
+D001,P002,R1002,Lipid Panel,High LDL,2025-10-16,,,,,
+D002,P003,R1003,Chest X-Ray,Fracture detected,2025-10-17,,,,,
+D002,P004,R1004,Blood Sugar,Fasting 92 mg/dL,2025-10-17,,,,,
+D003,P005,R1005,CRP,Elevated,2025-10-18,,,,,
+D001,P001,R1006,sample,this is just a sample report,2025-10-18,Normal,Completed,,2025-10-18 17:44:39,
+D001,P048,R1007,blood test,kindly look at this ,2025-11-09,Normal,Completed,,2025-11-09 10:59:03,uploads/lab_reports/R1007.pdf
+D001,P052,R1008,Blood test,The Blood Test reports seem fine.,2025-11-09,Normal,Completed,Maintain Diet,2025-11-09 12:33:50,uploads/lab_reports/R1008.pdf

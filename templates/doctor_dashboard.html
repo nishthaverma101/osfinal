@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Doctor Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --success-green: #10b981;
+            --warning-orange: #f59e0b;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.12);
+            --shadow-lg: 0 16px 48px rgba(0,0,0,0.16);
+            --shadow-xl: 0 24px 64px rgba(0,0,0,0.2);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body { 
+            background: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            min-height: 100vh;
+            position: relative;
+            color: #1e293b;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(102, 126, 234, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
+                linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(102, 126, 234, 0.02) 35px, rgba(102, 126, 234, 0.02) 70px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .navbar { 
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+        }
+        
+        .navbar-brand { 
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.75rem;
+            letter-spacing: -0.5px;
+        }
+        
+        .container-narrow { 
+            max-width: 1400px; 
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .card { 
+            border-radius: 16px; 
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            background: #ffffff;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+        
+        .card:hover::before {
+            opacity: 1;
+        }
+        
+        .section-title { 
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            font-size: 1.8rem;
+        }
+        
+        .severity-header { 
+            background: var(--primary-gradient);
+            color: #fff;
+            padding: 20px 28px;
+            border-radius: 16px 16px 0 0;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .severity-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .badge-pill { 
+            border-radius: 50px;
+            padding: 0.5rem 1.2rem;
+            font-weight: 700;
+            font-size: 0.875rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .action-btn {
+            min-width: 90px;
+            text-align: center;
+            font-weight: 600;
+            border-radius: 8px;
+        }
+        
+        .table {
+            border-radius: 0 0 16px 16px;
+            overflow: hidden;
+            margin: 0;
+        }
+        
+        .table thead {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        
+        .table thead th {
+            font-weight: 700;
+            color: #1e293b;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            padding: 16px;
+            border: none;
+        }
+        
+        .table tbody tr {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+        }
+        
+        .table tbody tr:hover {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+            transform: scale(1.005);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+        }
+        
+        .table tbody td {
+            padding: 16px;
+            vertical-align: middle;
+            color: #475569;
+        }
+        
+        .btn {
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 0.625rem 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .btn-success {
+            background: var(--primary-gradient);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #6a3d8f 100%);
+        }
+        
+        .alert {
+            border-radius: 12px;
+            border: none;
+            box-shadow: var(--shadow-sm);
+            padding: 16px 20px;
+            font-weight: 500;
+            border-left: 4px solid;
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+            border-left-color: var(--success-green);
+            color: #065f46;
+        }
+    </style>
+    {% set has_queues = queues is defined and queues %}
+    {% set has_reports = reports is defined and reports %}
+    {% set doctor_label = doctor_id if doctor_id is defined else '—' %}
+    {% set severity_counts = severity_counts if severity_counts is defined else {} %}
+    {% set mutex_snapshot = mutex_snapshot if mutex_snapshot is defined else {} %}
+    {% set total_patients = total_patients if total_patients is defined else None %}
+    {% set active_consultations = active_consultations if active_consultations is defined else None %}
+    {% macro action_buttons(patient) %}
+        {% set status = (patient.status|string).lower() %}
+        {% if status == 'scheduled' %}
+        <form action="/start_consultation" method="POST" class="d-inline">
+            <input type="hidden" name="appointment_id" value="{{ patient.appointment_id }}" />
+            <input type="hidden" name="doctor_id" value="{{ doctor_id }}" />
+            <button type="submit" class="btn btn-sm btn-success action-btn">Start</button>
+        </form>
+        {% elif status == 'in-session' %}
+        <form action="/complete_consultation" method="POST" class="d-inline">
+            <input type="hidden" name="appointment_id" value="{{ patient.appointment_id }}" />
+            <input type="hidden" name="doctor_id" value="{{ doctor_id }}" />
+            <button type="submit" class="btn btn-sm btn-danger action-btn">Done</button>
+        </form>
+        {% else %}
+        <span class="badge bg-secondary action-btn">Completed</span>
+        {% endif %}
+    {% endmacro %}
+</head>
+<body>
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="/">CareQueue</a>
+    <div class="ms-auto">
+      <a href="/" class="btn btn-outline-danger btn-sm"><i class="bi bi-box-arrow-right"></i> Logout</a>
+    </div>
+  </div>
+  </nav>
+
+<div class="dashboard-header">
+  <div class="container-narrow">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h1 class="mb-0" style="font-size: 1.75rem; font-weight: 700; color: #1e293b;">
+          Doctor Dashboard
+        </h1>
+        {% if doctor_info and doctor_info.full_name %}
+        <p class="mb-0 mt-1" style="color: var(--primary-color); font-size: 1.1rem; font-weight: 600;">
+          <i class="bi bi-person-badge me-2"></i>{{ doctor_info.full_name }}
+          {% if doctor_info.specialization %}
+            <span style="color: #64748b; font-weight: 500; font-size: 0.95rem;"> - {{ doctor_info.specialization }}</span>
+          {% endif %}
+        </p>
+        <p class="mb-0 mt-1" style="color: #64748b; font-size: 0.9rem;">
+          <span class="badge bg-light text-dark">ID: {{ doctor_id }}</span>
+          {% if doctor_info.hospital_branch %}
+            <span class="badge bg-light text-dark ms-2">{{ doctor_info.hospital_branch }}</span>
+          {% endif %}
+        </p>
+        {% else %}
+        <p class="mb-0 mt-1" style="color: var(--primary-color); font-size: 1.1rem; font-weight: 600;">
+          <i class="bi bi-person-badge me-2"></i>Doctor ID: {{ doctor_id }}
+        </p>
+        {% endif %}
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        {% if notifications is defined and notifications and notifications|length > 0 %}
+        <button type="button" class="btn btn-primary position-relative me-2" data-bs-toggle="modal" data-bs-target="#notificationsModal" style="border-radius: 50%; width: 45px; height: 45px; padding: 0;">
+          <i class="bi bi-bell-fill"></i>
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.7rem;">
+            {{ notifications|length }}
+          </span>
+        </button>
+        {% endif %}
+        <form action="/call_next" method="POST" class="me-2">
+          <input type="hidden" name="doctor_id" value="{{ doctor_id }}">
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-bell me-1"></i>Call Next Patient
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-narrow">
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, msg in messages %}
+        <div class="alert alert-{{ category if category else 'success' }}" role="alert">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="card mb-4" id="mutexMonitorCard">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="mb-0">
+          <i class="bi bi-shield-lock text-primary me-2"></i>Mutex Monitor
+        </h5>
+        <span class="badge bg-{{ 'danger' if mutex_snapshot and mutex_snapshot|length > 0 else 'success' }}">
+          {{ mutex_snapshot|length if mutex_snapshot else 0 }} active lock{{ '' if (mutex_snapshot and mutex_snapshot|length == 1) or not mutex_snapshot else 's' }}
+        </span>
+      </div>
+      <p class="text-muted mb-3">
+        Shows active mutex locks during concurrent operations (e.g., booking appointments simultaneously). 
+        <strong>Watch this panel to see locks in action when multiple users book at the same time.</strong>
+      </p>
+      {% if mutex_snapshot and mutex_snapshot|length > 0 %}
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead>
+            <tr>
+              <th>Lock Key</th>
+              <th>Operation</th>
+              <th>Active Since</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for key, meta in mutex_snapshot.items() %}
+            <tr>
+              <td><code class="text-primary">{{ key }}</code></td>
+              <td><span class="badge bg-warning text-dark">{{ meta.context }}</span></td>
+              <td><small class="text-muted">{{ meta.since }}</small></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="bg-light rounded p-3 text-muted d-flex align-items-center">
+        <i class="bi bi-check2-circle text-success me-2"></i>
+        All clear — no appointment locks are currently held.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+
+  {% if total_patients is not none or active_consultations is not none %}
+  <div class="row g-3 mb-4">
+    {% if total_patients is not none %}
+    <div class="col-6 col-md-3">
+      <div class="stats-card">
+        <div class="stats-count">{{ total_patients }}</div>
+        <div class="stats-label">Total Patients</div>
+      </div>
+    </div>
+    {% endif %}
+    {% if active_consultations is not none %}
+    <div class="col-6 col-md-3">
+      <div class="stats-card" style="border-left-color: #10b981;">
+        <div class="stats-count" style="color: #10b981;">{{ active_consultations }}</div>
+        <div class="stats-label">Active Consultations</div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="mb-5">
+    <div class="d-flex align-items-center mb-4">
+      <div class="me-3" style="width: 4px; height: 40px; background: var(--primary-gradient); border-radius: 2px;"></div>
+      <h3 class="mb-0" style="font-weight: 800; color: #1e293b; font-size: 1.75rem;">
+        <i class="bi bi-people-fill me-2" style="color: var(--primary-color);"></i>Patient Queues
+      </h3>
+    </div>
+    {% if has_queues %}
+      {% set priority_queue = queues.get('priority', []) %}
+      {% set fcfs_queue = queues.get('fcfs', []) %}
+
+      <div class="mb-3">
+        <div class="severity-header d-flex justify-content-between align-items-center">
+          <div>Priority Queue</div>
+          <span class="badge bg-warning text-dark badge-pill">{{ severity_counts.get('priority', priority_queue|length) }} patients</span>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            {% if priority_queue %}
+            <div class="table-responsive">
+              <table class="table table-sm table-hover mb-0">
+                <thead>
+                  <tr>
+                    <th>Patient ID</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for patient in priority_queue %}
+                  <tr>
+                    <td>{{ patient.patient_id }}</td>
+                    <td>{{ patient.reason_for_visit }}</td>
+                    <td><span class="badge bg-info">{{ patient.status }}</span></td>
+                    <td>
+                      <div class="d-flex gap-2">
+                        {% if patient.appointment_id is defined %}
+                          {{ action_buttons(patient) }}
+                        {% else %}
+                          <span class="badge bg-secondary action-btn">N/A</span>
+                        {% endif %}
+                        <button type="button" class="btn btn-sm btn-outline-info action-btn" onclick="viewPatientDetails('{{ patient.patient_id }}')">
+                          <i class="bi bi-person"></i> View
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+              <p class="text-muted mb-0">No patients in this queue.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <div class="severity-header d-flex justify-content-between align-items-center">
+          <div><i class="bi bi-clock-history me-2"></i>FCFS Queue (First Come First Served)</div>
+          <span class="badge bg-info text-white badge-pill">{{ severity_counts.get('fcfs', fcfs_queue|length) }} patients</span>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            {% if fcfs_queue %}
+            <div class="table-responsive">
+              <table class="table table-sm table-hover mb-0">
+                <thead>
+                  <tr>
+                    <th>Patient ID</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Est. Wait (min)</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for patient in fcfs_queue %}
+                  <tr>
+                    <td>{{ patient.patient_id }}</td>
+                    <td>{{ patient.reason_for_visit }}</td>
+                    <td><span class="badge bg-secondary">{{ patient.status }}</span></td>
+                    <td>
+                      {% if patient.Estimated_Wait_Time is defined %}
+                        {{ '%.1f'|format(patient.Estimated_Wait_Time) }}
+                      {% else %}
+                        —
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div class="d-flex gap-2">
+                        {% if patient.appointment_id is defined %}
+                          {{ action_buttons(patient) }}
+                        {% else %}
+                          <span class="badge bg-secondary action-btn">N/A</span>
+                        {% endif %}
+                        <button type="button" class="btn btn-sm btn-outline-info action-btn" onclick="viewPatientDetails('{{ patient.patient_id }}')">
+                          <i class="bi bi-person"></i> View
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+              <p class="text-muted mb-0">No patients in this queue.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+    {% else %}
+      <div class="card">
+        <div class="card-body">
+          <p class="mb-0 text-muted">No queue data provided. Navigate from the main dashboard to view queues.</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="mb-5">
+    <div class="d-flex align-items-center mb-4">
+      <div class="me-3" style="width: 4px; height: 40px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); border-radius: 2px;"></div>
+      <h3 class="mb-0" style="font-weight: 800; color: #1e293b; font-size: 1.75rem;">
+        <i class="bi bi-file-earmark-medical-fill me-2" style="color: #3b82f6;"></i>Lab Reports
+      </h3>
+    </div>
+    {% if reports and reports|length > 0 %}
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm table-striped mb-0">
+            <thead>
+              <tr>
+                <th>Report ID</th>
+                <th>Patient ID</th>
+                <th>Test Name</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in reports %}
+              <tr>
+                <td>{{ r.get('report_id', 'N/A') }}</td>
+                <td>{{ r.get('patient_id', 'N/A') }}</td>
+                <td>{{ r.get('test_name', 'N/A') }}</td>
+                <td>{{ r.get('date', r.get('test_date', 'N/A')) }}</td>
+                <td><span class="badge bg-info">{{ r.get('status', 'N/A') }}</span></td>
+                <td>
+                  <a href="/report/{{ r.get('report_id', '') }}/view" class="btn btn-sm btn-primary" target="_blank">
+                    <i class="bi bi-eye"></i> View
+                  </a>
+                  {% if r.get('file_path') %}
+                  <a href="{{ url_for('static', filename=r.get('file_path')) }}" class="btn btn-sm btn-success" download>
+                    <i class="bi bi-download"></i> Download
+                  </a>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="card">
+      <div class="card-body">
+        <p class="mb-0 text-muted">No lab reports found for this doctor.</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="text-end">
+    <a href="/" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back to Home</a>
+  </div>
+</div>
+
+<!-- Notifications Modal -->
+{% if notifications is defined and notifications and notifications|length > 0 %}
+<div class="modal fade" id="notificationsModal" tabindex="-1" aria-labelledby="notificationsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <h5 class="modal-title" id="notificationsModalLabel">
+          <i class="bi bi-bell-fill me-2"></i>Notifications
+          <span class="badge bg-light text-dark ms-2">{{ notifications|length }}</span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+        <div class="list-group">
+          {% for notification in notifications %}
+          <div class="list-group-item mb-2 border-0 shadow-sm" style="border-radius: 12px !important;">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <h6 class="mb-1">
+                  {% if notification.notification_type == 'lab_report' %}
+                    <i class="bi bi-file-earmark-medical text-primary me-2"></i>
+                  {% elif notification.notification_type == 'appointment' %}
+                    <i class="bi bi-calendar-check text-success me-2"></i>
+                  {% else %}
+                    <i class="bi bi-bell text-info me-2"></i>
+                  {% endif %}
+                  {{ notification.title }}
+                </h6>
+                <p class="mb-1 text-muted">{{ notification.message }}</p>
+                <small class="text-muted">
+                  <i class="bi bi-clock me-1"></i>{{ notification.created_at }}
+                </small>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <a href="/doctor/{{ doctor_id }}/lab_notifications" class="btn btn-primary">View All Notifications</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Patient Details Modal -->
+<div class="modal fade" id="patientDetailsModal" tabindex="-1" aria-labelledby="patientDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="patientDetailsModalLabel">
+          <i class="bi bi-person me-2"></i>Patient Details
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="patientDetailsContent">
+        <div class="text-center">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function markNotificationRead(notificationId) {
+    fetch(`/notification/${notificationId}/read`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        console.log('Notification marked as read');
+      }
+    })
+    .catch(error => {
+      console.error('Error marking notification as read:', error);
+    });
+  }
+  
+  function viewPatientDetails(patientId) {
+    fetch(`/patient/${patientId}/details`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          const patient = data.patient;
+          const content = `
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <strong>Name:</strong><br>
+                ${patient.first_name} ${patient.last_name}
+              </div>
+              <div class="col-md-6 mb-3">
+                <strong>Gender:</strong><br>
+                ${patient.gender || 'N/A'}
+              </div>
+              <div class="col-md-6 mb-3">
+                <strong>Mobile Number:</strong><br>
+                ${patient.contact_number || 'N/A'}
+              </div>
+              <div class="col-md-6 mb-3">
+                <strong>Email:</strong><br>
+                ${patient.email || 'N/A'}
+              </div>
+              <div class="col-md-6 mb-3">
+                <strong>Date of Birth:</strong><br>
+                ${patient.date_of_birth || 'N/A'}
+              </div>
+              <div class="col-md-6 mb-3">
+                <strong>Patient ID:</strong><br>
+                ${patient.patient_id || 'N/A'}
+              </div>
+              ${patient.address ? `
+              <div class="col-12 mb-3">
+                <strong>Address:</strong><br>
+                ${patient.address}
+              </div>
+              ` : ''}
+            </div>
+          `;
+          document.getElementById('patientDetailsContent').innerHTML = content;
+          const modal = new bootstrap.Modal(document.getElementById('patientDetailsModal'));
+          modal.show();
+        } else {
+          alert('Patient details not found');
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching patient details:', error);
+        alert('Error loading patient details');
+      });
+  }
+  
+  // Auto-refresh mutex monitor every 3 seconds to show active locks in real-time
+  // This helps catch mutex locks that are held during concurrent booking operations
+  let mutexRefreshInterval = setInterval(function() {
+    // Only refresh if user is not actively interacting with forms
+    const activeElement = document.activeElement;
+    const isFormActive = activeElement && (
+      activeElement.tagName === 'INPUT' || 
+      activeElement.tagName === 'TEXTAREA' || 
+      (activeElement.tagName === 'BUTTON' && activeElement.type === 'submit') ||
+      activeElement.tagName === 'SELECT' ||
+      activeElement.isContentEditable
+    );
+    
+    // Check if any form has focus
+    const formHasFocus = document.querySelector('input:focus, textarea:focus, select:focus');
+    
+    // Reload page to get updated mutex snapshot, but only if form is not active
+    if (!isFormActive && !formHasFocus) {
+      // Use location.reload to update mutex monitor
+      // This will show locks that are held during concurrent booking operations
+      window.location.reload();
+    }
+  }, 3000);
+  
+  // Clear interval when page is unloading to prevent multiple refreshes
+  window.addEventListener('beforeunload', function() {
+    if (mutexRefreshInterval) {
+      clearInterval(mutexRefreshInterval);
+    }
+  });
+</script>
+</body>
+</html>

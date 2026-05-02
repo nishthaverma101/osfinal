@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lab Notifications - Doctor Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    body { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .notifications-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      margin: 30px auto;
+      max-width: 1200px;
+    }
+    .notification-card {
+      background: #f8f9fa;
+      border-radius: 15px;
+      padding: 20px;
+      margin: 15px 0;
+      border-left: 4px solid #667eea;
+      transition: all 0.3s ease;
+    }
+    .notification-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    .notification-card.critical {
+      border-left-color: #dc3545;
+      background: #fff5f5;
+    }
+    .notification-card.urgent {
+      border-left-color: #fd7e14;
+      background: #fff8f0;
+    }
+    .notification-card.normal {
+      border-left-color: #28a745;
+      background: #f8fff8;
+    }
+    .section-title {
+      color: #2c3e50;
+      font-weight: 700;
+      margin-bottom: 30px;
+    }
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .status-new { background: #e3f2fd; color: #1976d2; }
+    .status-reviewed { background: #e8f5e8; color: #2e7d32; }
+    .status-pending { background: #fff3e0; color: #f57c00; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="notifications-container">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="section-title">
+          <i class="fas fa-bell me-2"></i>Lab Notifications
+        </h2>
+        <div>
+          <a href="/doctor/{{ doctor_id }}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+          </a>
+          <a href="/lab/upload" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Upload New Report
+          </a>
+        </div>
+      </div>
+
+      <!-- IPC Notifications -->
+      {% if notifications is defined and notifications %}
+      <div class="mb-4">
+        <h5 class="mb-3"><i class="fas fa-bell me-2"></i>Recent Notifications</h5>
+        <div class="row">
+          {% for notification in notifications %}
+          <div class="col-md-6 mb-3">
+            <div class="notification-card {{ 'critical' if notification.notification_type == 'lab_report' else 'normal' }}">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <h6 class="mb-1">
+                    <i class="fas fa-file-medical me-2"></i>{{ notification.title }}
+                  </h6>
+                  <small class="text-muted">{{ notification.created_at }}</small>
+                </div>
+                {% if notification.is_read != 'True' %}
+                <span class="status-badge status-new">New</span>
+                {% else %}
+                <span class="status-badge status-reviewed">Read</span>
+                {% endif %}
+              </div>
+              <p class="mb-2">{{ notification.message }}</p>
+              {% if notification.report_id %}
+              <a href="/report/{{ notification.report_id }}/view" class="btn btn-sm btn-primary" onclick="markNotificationRead('{{ notification.notification_id }}')">
+                <i class="fas fa-eye me-1"></i>View Full Report
+              </a>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Lab Reports -->
+      {% if reports %}
+        <div class="mb-4">
+          <h5 class="mb-3"><i class="fas fa-vial me-2"></i>All Lab Reports</h5>
+        </div>
+        <div class="row">
+          {% for report in reports %}
+          <div class="col-md-6 mb-4">
+            <div class="notification-card {{ 'critical' if report.priority == 'Critical' else 'urgent' if report.priority == 'High' else 'normal' }}">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                  <h6 class="mb-1">
+                    <i class="fas fa-vial me-2"></i>{{ report.test_name }}
+                  </h6>
+                  <small class="text-muted">Report ID: {{ report.report_id }}</small>
+                </div>
+                <span class="status-badge status-{{ 'new' if report.status == 'Pending' else 'reviewed' }}">{{ report.status }}</span>
+              </div>
+              
+              <div class="mb-3">
+                <strong>Patient:</strong> {{ report.first_name }} {{ report.last_name }}<br>
+                <strong>DOB:</strong> {{ report.date_of_birth }}<br>
+                <strong>Date:</strong> {{ report.date }}<br>
+                <strong>Priority:</strong> <span class="badge bg-{{ 'danger' if report.priority == 'Critical' else 'warning' if report.priority == 'High' else 'success' }}">{{ report.priority }}</span>
+              </div>
+              
+              <div class="mb-3">
+                <strong>Result Preview:</strong>
+                <div class="mt-2 p-3 bg-white rounded" style="border: 1px solid #dee2e6; max-height: 150px; overflow-y: auto;">
+                  {{ report.result[:200] }}{% if report.result|length > 200 %}...{% endif %}
+                </div>
+              </div>
+              
+              <div class="d-flex gap-2 flex-wrap">
+                <a href="/report/{{ report.report_id }}/view" class="btn btn-sm btn-primary">
+                  <i class="fas fa-eye me-1"></i>View Full Report
+                </a>
+                <button class="btn btn-sm btn-success" onclick="markAsReviewed('{{ report.report_id }}')">
+                  <i class="fas fa-check me-1"></i>Mark as Reviewed
+                </button>
+                <button class="btn btn-sm btn-info" onclick="viewPatient('{{ report.patient_id }}')">
+                  <i class="fas fa-user me-1"></i>View Patient
+                </button>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% elif not notifications %}
+        <div class="text-center py-5">
+          <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
+          <h4 class="text-muted">No Lab Notifications</h4>
+          <p class="text-muted">You don't have any new lab reports at the moment.</p>
+          <a href="/lab/upload" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Upload New Report
+          </a>
+        </div>
+      {% endif %}
+
+      <!-- IPC Status -->
+      <div class="mt-5">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>IPC System Status</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-4">
+                <div class="text-center">
+                  <i class="fas fa-wifi fa-2x text-success mb-2"></i>
+                  <h6>Connection Status</h6>
+                  <span class="badge bg-success">Active</span>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="text-center">
+                  <i class="fas fa-clock fa-2x text-info mb-2"></i>
+                  <h6>Last Update</h6>
+                  <small class="text-muted">{{ notification.created_at if notification.created_at else 'N/A' }}</small>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="text-center">
+                  <i class="fas fa-shield-alt fa-2x text-warning mb-2"></i>
+                  <h6>Security</h6>
+                  <span class="badge bg-warning">Encrypted</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function markNotificationRead(notificationId) {
+      fetch(`/notification/${notificationId}/read`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          console.log('Notification marked as read');
+        }
+      })
+      .catch(error => {
+        console.error('Error marking notification as read:', error);
+      });
+    }
+    
+    function markAsReviewed(reportId) {
+      if (confirm('Mark this report as reviewed?')) {
+        // In a real system, this would make an API call
+        alert('Report marked as reviewed!');
+        location.reload();
+      }
+    }
+    
+    function viewPatient(patientId) {
+      window.open(`/patient/${patientId}`, '_blank');
+    }
+    
+    function downloadReport(reportId) {
+      // In a real system, this would generate and download a PDF
+      alert('Downloading report...');
+    }
+    
+    // Auto-refresh every 30 seconds for real-time updates
+    setInterval(function() {
+      // In a real system, this would check for new notifications via WebSocket or AJAX
+      console.log('Checking for new lab reports...');
+    }, 30000);
+  </script>
+</body>
+</html>
+
+
+
+

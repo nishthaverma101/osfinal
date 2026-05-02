@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Select Doctor and Slot</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-light">
+  <div class="container" style="max-width:900px; margin-top:30px;">
+    <h3 class="mb-3">Choose Doctor and Slot</h3>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="alert alert-{{ category }}">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form class="row g-3 mb-4" method="GET" action="{{ url_for('doctor_schedule') }}">
+      <div class="col-sm-5">
+        <label class="form-label">Doctor</label>
+        <select name="doctor_id" class="form-select" required>
+          <option value="" disabled selected>Select a doctor</option>
+          {% for d in doctors %}
+            <option value="{{ d.get('doctor_id') }}" {% if selected_doctor == d.get('doctor_id') %}selected{% endif %}>
+              {{ d.get('name') or d.get('doctor_name') or d.get('doctor_id') }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-sm-4">
+        <label class="form-label">Date</label>
+        <input type="date" name="date" class="form-control" value="{{ selected_date }}" required />
+      </div>
+      <div class="col-sm-3 align-self-end">
+        <button type="submit" class="btn btn-primary w-100">Search</button>
+      </div>
+    </form>
+
+    {% if selected_doctor and selected_date %}
+    <div class="card p-3">
+      <h5 class="mb-3">Available Slots for {{ selected_date }}</h5>
+      <div class="mb-2"><span class="badge bg-info">Doctor: {{ selected_doctor }}</span></div>
+      {% if available_slots %}
+      <form method="POST" action="{{ url_for('book_appointment') }}">
+        <input type="hidden" name="step" value="finish" />
+        <input type="hidden" name="doctor_id" value="{{ selected_doctor }}" />
+        <input type="hidden" name="appointment_date" value="{{ selected_date }}" />
+        <div class="row g-2 mb-3">
+          {% for t in available_slots %}
+            <div class="col-6 col-md-3">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="appointment_time" id="slot_{{ loop.index }}" value="{{ t }}" required>
+                <label class="form-check-label" for="slot_{{ loop.index }}">{{ t }}</label>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        <div class="row g-3">
+          <div class="col-sm-4">
+            <label class="form-label">Patient ID</label>
+            <input type="text" name="patient_id" class="form-control" required />
+          </div>
+          <div class="col-sm-8">
+            <label class="form-label">Reason for Visit</label>
+            <input type="text" name="reason_for_visit" class="form-control" placeholder="e.g., consultation, follow-up" required />
+          </div>
+        </div>
+        <div class="mt-3 d-flex gap-2">
+          <button type="submit" class="btn btn-success">Book Selected Slot</button>
+          <a href="/book" class="btn btn-secondary">Back</a>
+        </div>
+      </form>
+      {% else %}
+        <p class="text-muted mb-0">No slots available for the chosen date.</p>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+

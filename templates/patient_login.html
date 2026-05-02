@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Patient Login</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .login-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 40px;
+      max-width: 450px;
+      width: 100%;
+    }
+    .login-card h2 {
+      color: #667eea;
+      font-weight: 700;
+      margin-bottom: 30px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      padding: 12px 30px;
+      border-radius: 50px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <h2><i class="fas fa-user me-2"></i>Patient Login</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
+            {{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% if step == 1 %}
+    <!-- Step 1: Enter Patient ID -->
+    <form method="POST">
+      <input type="hidden" name="step" value="init" />
+      <div class="mb-3">
+        <label class="form-label">Patient ID</label>
+        <input type="text" name="patient_id" class="form-control" value="{{ request.args.get('patient_id', '') }}" required />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Mobile Number (Optional - for verification)</label>
+        <input type="text" name="mobile" class="form-control" placeholder="Enter mobile if different" />
+      </div>
+      <button type="submit" class="btn btn-primary w-100">
+        <i class="fas fa-paper-plane me-2"></i>Send OTP
+      </button>
+    </form>
+    {% elif step == 2 %}
+    <!-- Step 2: Verify OTP -->
+    <form method="POST">
+      <input type="hidden" name="step" value="verify" />
+      <div class="mb-3">
+        <label class="form-label">Enter OTP</label>
+        <input type="text" name="otp" class="form-control" maxlength="6" placeholder="000000" required autocomplete="off" />
+        <small class="text-muted">OTP sent to your registered mobile number</small>
+      </div>
+      {% if debug_otp %}
+      <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>⚠️ SMS Not Configured:</strong> OTP is {{ debug_otp }}<br>
+        <small class="mt-2 d-block">
+          <strong>To receive OTP on your phone:</strong><br>
+          1. Sign up at <a href="https://www.twilio.com/try-twilio" target="_blank">twilio.com</a> (FREE trial)<br>
+          2. Get your Account SID, Auth Token, and Phone Number<br>
+          3. Update <code>otp_config.py</code> with your credentials<br>
+          4. Run: <code>pip install twilio</code><br>
+          5. See <code>ENABLE_SMS_NOW.md</code> for detailed steps
+        </small>
+      </div>
+      {% endif %}
+      <button type="submit" class="btn btn-primary w-100 mb-2">
+        <i class="fas fa-check me-2"></i>Verify OTP
+      </button>
+      <a href="/patient/login" class="btn btn-outline-secondary w-100">
+        <i class="fas fa-redo me-2"></i>Resend OTP
+      </a>
+    </form>
+    {% endif %}
+
+    <div class="text-center mt-4">
+      <a href="/" class="text-muted">Back to Home</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

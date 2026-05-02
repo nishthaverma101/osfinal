@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Patient Dashboard - {{ patient_info.first_name }} {{ patient_info.last_name }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --primary-dark: #1e40af;
+      --secondary-color: #0ea5e9;
+      --accent-color: #10b981;
+      --danger-color: #ef4444;
+      --warning-color: #f59e0b;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --bg-light: #f8fafc;
+      --bg-white: #ffffff;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      background: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+      min-height: 100vh;
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+    
+    /* Header Bar */
+    .dashboard-header {
+      background: var(--bg-white);
+      border-bottom: 1px solid var(--border-color);
+      padding: 20px 0;
+      margin-bottom: 30px;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .dashboard-header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0;
+    }
+    
+    .dashboard-header .patient-name {
+      color: var(--primary-color);
+    }
+    
+    .main-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px 40px 24px;
+    }
+    
+    /* Patient Info Card */
+    .info-card {
+      background: var(--bg-white);
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-color);
+    }
+    
+    .info-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    
+    .info-value {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    /* Stats Cards */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .stats-card {
+      background: var(--bg-white);
+      border-radius: 12px;
+      padding: 28px 24px;
+      text-align: center;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-color);
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .stats-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--primary-color);
+    }
+    
+    .stats-card:nth-child(2)::before {
+      background: var(--accent-color);
+    }
+    
+    .stats-card:nth-child(3)::before {
+      background: var(--warning-color);
+    }
+    
+    .stats-card:nth-child(4)::before {
+      background: var(--secondary-color);
+    }
+    
+    .stats-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .stats-count {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+    
+    .stats-label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Emergency Bar */
+    .emergency-bar {
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 30px;
+      box-shadow: var(--shadow-md);
+      border-left: 4px solid #991b1b;
+    }
+    
+    .emergency-bar i {
+      font-size: 1.25rem;
+      margin-right: 8px;
+    }
+    
+    /* Navigation Tabs */
+    .tab-style {
+      background: var(--bg-white);
+      border-radius: 12px;
+      padding: 8px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+    }
+    
+    .tab-style .nav-link {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-radius: 8px;
+      margin-right: 8px;
+      padding: 12px 24px;
+      background: transparent;
+      transition: all 0.2s ease;
+      border: none;
+    }
+    
+    .tab-style .nav-link:hover {
+      color: var(--primary-color);
+      background: rgba(37, 99, 235, 0.08);
+    }
+    
+    .tab-style .nav-link.active {
+      background: var(--primary-color);
+      color: #fff;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    /* Content Cards */
+    .card.soft-card {
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-md);
+      background: var(--bg-white);
+      margin-bottom: 24px;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+    
+    .card.soft-card:hover {
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .card-header {
+      border: none;
+      font-size: 1rem;
+      font-weight: 700;
+      background: var(--bg-light);
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--border-color);
+      padding: 18px 24px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-size: 0.875rem;
+    }
+    
+    .card-body {
+      padding: 24px;
+    }
+    
+    /* Tables */
+    .table {
+      margin-bottom: 0;
+      font-size: 0.9375rem;
+    }
+    
+    .table thead {
+      background: var(--bg-light);
+    }
+    
+    .table th {
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      border-bottom: 2px solid var(--border-color);
+      padding: 12px 16px;
+    }
+    
+    .table tbody tr {
+      transition: background-color 0.15s ease;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .table tbody tr:hover {
+      background: var(--bg-light);
+    }
+    
+    .table tbody tr:last-child {
+      border-bottom: none;
+    }
+    
+    .table td {
+      padding: 16px;
+      color: var(--text-primary);
+      vertical-align: middle;
+    }
+    
+    /* Badges */
+    .badge {
+      padding: 6px 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .badge.bg-info {
+      background-color: var(--secondary-color) !important;
+      color: white;
+    }
+    
+    .badge.bg-secondary {
+      background-color: var(--text-secondary) !important;
+      color: white;
+    }
+    
+    /* Buttons */
+    .btn {
+      border-radius: 8px;
+      font-weight: 600;
+      padding: 8px 16px;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-outline-primary {
+      border: 1.5px solid var(--primary-color);
+      color: var(--primary-color);
+    }
+    
+    .btn-outline-primary:hover {
+      background: var(--primary-color);
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-outline-success {
+      border: 1.5px solid var(--accent-color);
+      color: var(--accent-color);
+    }
+    
+    .btn-outline-success:hover {
+      background: var(--accent-color);
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-primary {
+      background: var(--primary-color);
+      border: none;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.8125rem;
+    }
+    
+    /* Notification Card */
+    .notification-card {
+      background: var(--bg-white);
+      border-left: 4px solid var(--primary-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+    }
+    
+    /* Empty States */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-secondary);
+    }
+    
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    
+    @media (max-width: 900px) {
+      .stats-row { 
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+      .main-container {
+        padding: 0 16px 30px 16px;
+      }
+      .info-card {
+        padding: 24px 20px;
+      }
+      .dashboard-header {
+        padding: 16px 0;
+      }
+      .dashboard-header h1 {
+        font-size: 1.5rem;
+      }
+    }
+    
+    @media (max-width: 600px) {
+      .stats-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Dashboard Header -->
+  <div class="dashboard-header">
+    <div class="main-container">
+      <div class="d-flex justify-content-between align-items-center">
+        <h1>Patient Dashboard - <span class="patient-name">{{ patient_info.first_name }} {{ patient_info.last_name }}</span></h1>
+        <a href="/" class="btn btn-outline-danger">
+          <i class="fas fa-sign-out-alt me-2"></i>Logout
+        </a>
+      </div>
+    </div>
+  </div>
+
+<div class="main-container">
+  <!-- Patient Info Card -->
+  <div class="info-card">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+      <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Patient Information</h5>
+      <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#updateProfileModal">
+        <i class="fas fa-edit me-1"></i>Update Profile
+      </button>
+    </div>
+    <div class="row">
+      <div class="col-md-3 mb-2 mb-md-0">
+        <div class="info-label">Patient ID</div>
+        <div class="info-value">{{ patient_info.patient_id }}</div>
+      </div>
+      <div class="col-md-3 mb-2 mb-md-0">
+        <div class="info-label">Date of Birth</div>
+        <div class="info-value">{{ patient_info.date_of_birth }}</div>
+      </div>
+      <div class="col-md-3 mb-2 mb-md-0">
+        <div class="info-label">Contact</div>
+        <div class="info-value">{{ patient_info.contact_number }}</div>
+      </div>
+      <div class="col-md-3">
+        <div class="info-label">Insurance</div>
+        <div class="info-value">{{ patient_info.insurance_provider }}</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- OS Process Status Monitor -->
+  <div class="card soft-card mb-4" style="border-left: 4px solid #10b981;">
+    <div class="card-header" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);">
+      <i class="fas fa-microchip me-2"></i>System Process Status (OS Project Feature)
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-3 mb-3">
+          <div class="d-flex align-items-center">
+            <div class="me-3">
+              <div class="spinner-border spinner-border-sm text-success" role="status" style="width: 1.5rem; height: 1.5rem;">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+            <div>
+              <div class="fw-bold">Appointment Queue</div>
+              <small class="text-muted">Status: Active</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
+          <div class="d-flex align-items-center">
+            <div class="me-3">
+              <div class="spinner-border spinner-border-sm text-primary" role="status" style="width: 1.5rem; height: 1.5rem;">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+            <div>
+              <div class="fw-bold">IPC Channel</div>
+              <small class="text-muted">Status: Connected</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
+          <div class="d-flex align-items-center">
+            <div class="me-3">
+              <div class="spinner-border spinner-border-sm text-warning" role="status" style="width: 1.5rem; height: 1.5rem;">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+            <div>
+              <div class="fw-bold">Mutex Locks</div>
+              <small class="text-muted">Status: Monitoring</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
+          <div class="d-flex align-items-center">
+            <div class="me-3">
+              <div class="spinner-border spinner-border-sm text-info" role="status" style="width: 1.5rem; height: 1.5rem;">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+            <div>
+              <div class="fw-bold">File I/O</div>
+              <small class="text-muted">Status: Synchronized</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-3 p-3 bg-light rounded">
+        <small class="text-muted">
+          <i class="fas fa-info-circle me-1"></i>
+          <strong>OS Concepts Active:</strong> Priority Scheduling, FCFS Queue, IPC (Inter-Process Communication), Mutex Locks, File Locking, Process Synchronization
+        </small>
+      </div>
+    </div>
+  </div>
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stats-card">
+      <div class="stats-count">{{ upcoming_appointments|length }}</div>
+      <div class="stats-label">Upcoming Appointments</div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-count">{{ completed_appointments|length }}</div>
+      <div class="stats-label">Completed Visits</div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-count">{{ pending_bills|length }}</div>
+      <div class="stats-label">Pending Bills</div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-count">{{ lab_reports|length }}</div>
+      <div class="stats-label">Lab Reports</div>
+    </div>
+  </div>
+  <!-- Emergency bar -->
+  <div class="emergency-bar mb-4">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <span>Emergency Contact:</span> Call <b>102</b> for medical emergencies or visit the nearest emergency room.
+    <br>
+    <small>For non-emergency medical questions, contact your primary care physician.</small>
+  </div>
+  <!-- IPC Notifications Section -->
+  {% if notifications is defined and notifications %}
+  <div class="card soft-card mb-4">
+    <div class="card-header">
+      <i class="fas fa-bell me-2"></i>New Lab Report Notifications
+      <span class="badge bg-danger ms-2">{{ notifications|length }}</span>
+    </div>
+    <div class="card-body">
+      <div class="list-group list-group-flush">
+        {% for notification in notifications[:3] %}
+        <div class="list-group-item px-0 py-3 border-bottom">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+              <h6 class="mb-2 fw-bold">
+                <i class="fas fa-file-medical text-primary me-2"></i>{{ notification.title }}
+              </h6>
+              <p class="mb-2 text-muted small">{{ notification.message }}</p>
+              <small class="text-muted">
+                <i class="far fa-clock me-1"></i>{{ notification.created_at }}
+              </small>
+            </div>
+            <div class="ms-3">
+              {% if notification.report_id %}
+              <a href="/report/{{ notification.report_id }}/view" class="btn btn-sm btn-primary" onclick="markNotificationRead('{{ notification.notification_id }}')">
+                <i class="fas fa-eye me-1"></i>View Report
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% if notifications|length > 3 %}
+      <div class="text-center mt-3 pt-3 border-top">
+        <a href="#lab" class="btn btn-outline-primary" onclick="document.getElementById('lab-tab').click()">View All {{ notifications|length }} Notifications</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- TABS -->
+  <ul class="nav nav-pills mb-4 tab-style" id="dashboardTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="appointments-tab" data-bs-toggle="pill" data-bs-target="#appointments" type="button" role="tab">
+        <i class="fas fa-calendar-alt me-1"></i> Appointments
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="lab-tab" data-bs-toggle="pill" data-bs-target="#lab" type="button" role="tab">
+        <i class="fas fa-vials me-1"></i> Lab Reports
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="billing-tab" data-bs-toggle="pill" data-bs-target="#billing" type="button" role="tab">
+        <i class="fas fa-credit-card me-1"></i> Billing &amp; Payments
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="medications-tab" data-bs-toggle="pill" data-bs-target="#medications" type="button" role="tab">
+        <i class="fas fa-pills me-1"></i> Medications
+      </button>
+    </li>
+  </ul>
+  <div class="tab-content" id="dashboardTabsContent">
+    <!-- Appointments Tab -->
+    <div class="tab-pane fade show active" id="appointments" role="tabpanel">
+      <div class="card soft-card">
+        <div class="card-header">Upcoming Appointments</div>
+        <div class="card-body">
+          {% if upcoming_appointments %}
+          <div class="table-responsive">
+            <table class="table table-striped mb-0">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Doctor</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for a in upcoming_appointments %}
+                <tr>
+                  <td>{{ a.appointment_id }}</td>
+                  <td>{{ a.doctor_name }}</td>
+                  <td>{{ a.appointment_date }}</td>
+                  <td>{{ a.appointment_time }}</td>
+                  <td>
+                    <span class="badge bg-info text-dark">{{ a.status }}</span>
+                  </td>
+                  <td>
+                    {% if a.status|lower in ['scheduled', 'in-session'] %}
+                    <div class="btn-group btn-group-sm" role="group">
+                      <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#rescheduleModal{{ a.appointment_id }}">
+                        <i class="fas fa-calendar-alt me-1"></i>Reschedule
+                      </button>
+                      <form action="/patient/{{ patient_info.patient_id }}/cancel" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
+                        <input type="hidden" name="appointment_id" value="{{ a.appointment_id }}" />
+                        <button type="submit" class="btn btn-outline-danger">
+                          <i class="fas fa-times me-1"></i>Cancel
+                        </button>
+                      </form>
+                    </div>
+                    {% else %}
+                    <span class="text-muted small">No actions available</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <i class="far fa-calendar"></i>
+            <p class="mb-0">No upcoming appointments scheduled.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card soft-card">
+        <div class="card-header">Recent Appointments</div>
+        <div class="card-body">
+          {% if recent_appointments %}
+          <div class="table-responsive">
+            <table class="table table-striped mb-0">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Doctor</th>
+                  <th>Date</th>
+                  <th>Diagnosis</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for a in recent_appointments %}
+                <tr>
+                  <td>{{ a.appointment_id }}</td>
+                  <td>{{ a.doctor_name }}</td>
+                  <td>{{ a.appointment_date }}</td>
+                  <td>{{ a.diagnosis }}</td>
+                  <td>
+                    <span class="badge bg-secondary">{{ a.status }}</span>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <i class="far fa-calendar-check"></i>
+            <p class="mb-0">No recent appointments found.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <!-- Lab Reports Tab -->
+    <div class="tab-pane fade" id="lab" role="tabpanel">
+      <div class="card soft-card">
+        <div class="card-header">Lab Reports</div>
+        <div class="card-body">
+          {% if lab_reports %}
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Report ID</th>
+                  <th>Test</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in lab_reports %}
+                <tr>
+                  <td>{{ r.report_id }}</td>
+                  <td>{{ r.test_name }}</td>
+                  <td>{{ r.test_date if r.test_date else r.date }}</td>
+                  <td>{{ r.status }}</td>
+                  <td>
+                    <a href="/report/{{ r.report_id }}/view" class="btn btn-sm btn-outline-primary" target="_blank">
+                      <i class="fas fa-eye me-1"></i>View Full Report
+                    </a>
+                    {% if r.file_path %}
+                    <a href="{{ url_for('static', filename=r.file_path) }}" class="btn btn-sm btn-outline-success" download>
+                      <i class="fas fa-download me-1"></i>Download
+                    </a>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <i class="fas fa-vial"></i>
+            <p class="mb-0">No lab reports available.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <!-- Billing Tab -->
+    <div class="tab-pane fade" id="billing" role="tabpanel">
+      <div class="card soft-card">
+        <div class="card-header">Billing History</div>
+        <div class="card-body">
+          {% if bills %}
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Bill ID</th>
+                  <th>Date</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for bill in bills %}
+                <tr>
+                  <td>{{ bill.bill_id }}</td>
+                  <td>{{ bill.bill_date }}</td>
+                  <td>${{ bill.amount }}</td>
+                  <td>
+                    {% if bill.payment_status|lower == 'pending' %}
+                    <span class="badge bg-warning text-dark">{{ bill.payment_status }}</span>
+                    {% elif bill.payment_status|lower == 'paid' %}
+                    <span class="badge bg-success">{{ bill.payment_status }}</span>
+                    {% else %}
+                    <span class="badge bg-secondary">{{ bill.payment_status }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if bill.payment_status|lower == 'pending' %}
+                    <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#payBillModal{{ bill.bill_id }}">
+                      <i class="fas fa-credit-card me-1"></i>Pay Now
+                    </button>
+                    {% else %}
+                    <span class="text-muted small">Paid</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <i class="far fa-file-invoice-dollar"></i>
+            <p class="mb-0">No billing records available.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <!-- Medications Tab -->
+    <div class="tab-pane fade" id="medications" role="tabpanel">
+      <div class="card soft-card">
+        <div class="card-header">Current Medications & Allergies</div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-7">
+              <h6 class="mb-3 fw-bold text-primary">
+                <i class="fas fa-pills me-2"></i>Medications
+              </h6>
+              {% if medications %}
+              <ul class="list-unstyled">
+                {% for med in medications %}
+                <li class="mb-3 p-3 bg-light rounded border-start border-4 border-primary">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <strong class="d-block mb-1">{{ med.name }}</strong>
+                      <small class="text-muted d-block">{{ med.dosage }} • {{ med.frequency }}</small>
+                    </div>
+                    <span class="badge bg-primary">{{ med.status }}</span>
+                  </div>
+                </li>
+                {% endfor %}
+              </ul>
+              {% else %}
+              <div class="text-muted small p-3 bg-light rounded text-center">
+                <i class="far fa-check-circle me-1"></i>No medications found.
+              </div>
+              {% endif %}
+            </div>
+            <div class="col-md-5">
+              <h6 class="mb-3 fw-bold text-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>Allergies
+              </h6>
+              {% if allergies %}
+              <ul class="list-unstyled">
+                {% for allergy in allergies %}
+                <li class="mb-2">
+                  <span class="badge bg-warning text-dark me-2">{{ allergy.severity }}</span>
+                  <strong>{{ allergy.allergen }}</strong> - {{ allergy.reaction }}
+                </li>
+                {% endfor %}
+              </ul>
+              {% else %}
+              <div class="text-muted small">
+                <i class="far fa-check-circle me-1"></i>No known allergies.
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Reschedule Modal -->
+{% for a in upcoming_appointments %}
+<div class="modal fade" id="rescheduleModal{{ a.appointment_id }}" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/patient/{{ patient_info.patient_id }}/reschedule" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title">Reschedule Appointment {{ a.appointment_id }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="appointment_id" value="{{ a.appointment_id }}" />
+          <div class="mb-3">
+            <label class="form-label">New Date</label>
+            <input type="date" name="new_date" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">New Time</label>
+            <input type="time" name="new_time" class="form-control" required />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Reschedule</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- Pay Bill Modal -->
+{% for bill in bills %}
+{% if bill.payment_status|lower == 'pending' %}
+<div class="modal fade" id="payBillModal{{ bill.bill_id }}" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/patient/{{ patient_info.patient_id }}/pay_bill" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title">Pay Bill {{ bill.bill_id }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="bill_id" value="{{ bill.bill_id }}" />
+          <div class="mb-3">
+            <label class="form-label">Amount</label>
+            <input type="text" class="form-control" value="${{ bill.amount }}" readonly />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Payment Method</label>
+            <select name="payment_method" class="form-select" required>
+              <option value="Credit Card">Credit Card</option>
+              <option value="Debit Card">Debit Card</option>
+              <option value="Net Banking">Net Banking</option>
+              <option value="UPI">UPI</option>
+              <option value="Cash">Cash</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Pay Now</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<!-- Update Profile Modal -->
+<div class="modal fade" id="updateProfileModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form action="/patient/{{ patient_info.patient_id }}/update_profile" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title">Update Profile</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">First Name</label>
+              <input type="text" name="first_name" class="form-control" value="{{ patient_info.first_name }}" />
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Last Name</label>
+              <input type="text" name="last_name" class="form-control" value="{{ patient_info.last_name }}" />
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Contact Number</label>
+              <input type="text" name="contact_number" class="form-control" value="{{ patient_info.contact_number }}" />
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" class="form-control" value="{{ patient_info.email }}" />
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Date of Birth</label>
+              <input type="date" name="date_of_birth" class="form-control" value="{{ patient_info.date_of_birth }}" />
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Gender</label>
+              <select name="gender" class="form-select">
+                <option value="Male" {% if patient_info.gender == 'Male' %}selected{% endif %}>Male</option>
+                <option value="Female" {% if patient_info.gender == 'Female' %}selected{% endif %}>Female</option>
+                <option value="Other" {% if patient_info.gender == 'Other' %}selected{% endif %}>Other</option>
+              </select>
+            </div>
+            <div class="col-12 mb-3">
+              <label class="form-label">Address</label>
+              <textarea name="address" class="form-control" rows="2">{{ patient_info.address }}</textarea>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Insurance Provider</label>
+              <input type="text" name="insurance_provider" class="form-control" value="{{ patient_info.insurance_provider }}" />
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Insurance Number</label>
+              <input type="text" name="insurance_number" class="form-control" value="{{ patient_info.insurance_number }}" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Update Profile</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function markNotificationRead(notificationId) {
+    fetch(`/notification/${notificationId}/read`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        console.log('Notification marked as read');
+      }
+    })
+    .catch(error => {
+      console.error('Error marking notification as read:', error);
+    });
+  }
+  
+  // OS Project: Auto-refresh process status indicators
+  setInterval(function() {
+    const spinners = document.querySelectorAll('.spinner-border');
+    spinners.forEach(spinner => {
+      spinner.style.animation = 'none';
+      setTimeout(() => {
+        spinner.style.animation = '';
+      }, 10);
+    });
+  }, 3000);
+</script>
+</body>
+</html>

@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CareQueue: Healthcare Scheduling</title>
+
+    <!-- Google Fonts for Modern Heading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-color: #ffd12b;
+            --text-dark: #2c3e50;
+            --text-light: #6c757d;
+            --bg-light: #f8f9fa;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.12);
+            --shadow-lg: 0 16px 48px rgba(0,0,0,0.16);
+        }
+        
+        * {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Override global transition for flip cards to prevent unwanted movement */
+        .flip-card,
+        .flip-card * {
+            transition: none;
+        }
+        
+        .flip-card-inner {
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        .flip-card-front,
+        .flip-card-back {
+            transition: box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        .flip-card-front i {
+            transition: none !important;
+        }
+        
+        /* Prevent ALL icons and symbols from moving */
+        i,
+        .bi,
+        [class*="icon"],
+        .card-body i,
+        .card i,
+        .flip-card i,
+        .role-card i,
+        .block-section i,
+        .bi-check-circle,
+        .list-unstyled i,
+        .list-unstyled li i,
+        .btn i,
+        .nav-link i {
+            transition: none !important;
+            transform: none !important;
+        }
+        
+        /* Prevent icons from moving on hover of parent elements */
+        .card:hover i,
+        .card:hover .bi,
+        .flip-card:hover i,
+        .role-card:hover i,
+        .block-section .card:hover i,
+        .block-section .card:hover .bi,
+        .btn:hover i,
+        .list-unstyled li:hover i {
+            transform: none !important;
+        }
+        
+        .list-unstyled li {
+            transition: none !important;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Montserrat', Arial, sans-serif;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+            animation: pulse 8s ease-in-out infinite;
+        }
+        
+        body::after {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px);
+            pointer-events: none;
+            z-index: 0;
+            animation: rotate 20s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Navbar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 4px 20px rgba(97, 119, 152, 0.1);
+            padding: 1rem 0;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar.scrolled {
+            box-shadow: 0 8px 32px rgba(97, 119, 152, 0.15);
+        }
+        
+        .navbar-brand {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 1.8rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.5px;
+            position: relative;
+        }
+        
+        .navbar-brand::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: var(--primary-gradient);
+            transition: width 0.3s ease;
+        }
+        
+        .navbar-brand:hover::after {
+            width: 100%;
+        }
+        
+        .nav-link {
+            color: var(--text-dark) !important;
+            font-weight: 500;
+            margin-left: 1.2rem;
+            position: relative;
+            padding: 0.5rem 0 !important;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: var(--primary-gradient);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 80%;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+        
+        .btn-outline-light {
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            border-radius: 25px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-light:hover {
+            background: var(--primary-gradient);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Hero */
+        .hero-section {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+            backdrop-filter: blur(20px);
+            color: #fff;
+            border-radius: 40px;
+            padding: 100px 50px 80px 50px;
+            text-align: center;
+            margin: 60px auto 0 auto;
+            max-width: 1200px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+        
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -30%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,209,43,0.2) 0%, transparent 70%);
+            animation: float 12s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.5; }
+            50% { transform: scale(1.2) rotate(180deg); opacity: 0.8; }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(50px, -50px) scale(1.1); }
+        }
+        
+        .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: floatShape 20s infinite ease-in-out;
+        }
+        
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .shape:nth-child(2) {
+            width: 120px;
+            height: 120px;
+            background: rgba(255,209,43,0.2);
+            border-radius: 50%;
+            top: 60%;
+            right: 15%;
+            animation-delay: 2s;
+        }
+        
+        .shape:nth-child(3) {
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.25);
+            border-radius: 20% 80% 80% 20% / 20% 20% 80% 80%;
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+        
+        @keyframes floatShape {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(120deg); }
+            66% { transform: translate(-20px, 20px) rotate(240deg); }
+        }
+        
+        .hero-section h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            font-family: 'Poppins', sans-serif;
+            letter-spacing: -1px;
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 4px 30px rgba(0,0,0,0.3), 0 0 40px rgba(255,255,255,0.2);
+            animation: fadeInUp 0.8s ease-out;
+            background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.9) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .hero-section p {
+            font-size: 1.4rem;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+            opacity: 0.95;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+        
+        .hero-cta {
+            margin-bottom: 48px;
+            position: relative;
+            z-index: 1;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+        
+        .hero-cta .btn {
+            padding: 0.875rem 2.5rem;
+            margin-right: 16px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-cta .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .hero-cta .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .hero-cta .btn-primary {
+            background: var(--accent-color);
+            color: var(--text-dark);
+            border: none;
+        }
+        
+        .hero-cta .btn-primary:hover {
+            background: #ffc107;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(255, 209, 43, 0.4);
+        }
+        
+        .hero-cta .btn-outline-light {
+            color: #fff;
+            border: 2px solid rgba(255,255,255,0.8);
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .hero-cta .btn-outline-light:hover {
+            background: rgba(255,255,255,0.95);
+            color: var(--secondary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(255,255,255,0.3);
+        }
+
+        /* Feature Cards */
+        .feature-row {
+            margin-top: -30px;
+            margin-bottom: 60px;
+            justify-content: center;
+            gap: 2.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Flip Card Styles */
+        .flip-card {
+            background-color: transparent;
+            width: 240px;
+            height: 280px;
+            perspective: 1200px;
+            cursor: pointer;
+            margin: 0 15px;
+            position: relative;
+            transform: translateZ(0);
+            will-change: transform;
+        }
+        
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transform-style: preserve-3d;
+            transform-origin: center center;
+        }
+        
+        .flip-card:hover .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.5);
+            padding: 45px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid rgba(255,255,255,0.3);
+            position: absolute;
+            overflow: hidden;
+            transform-style: preserve-3d;
+        }
+        
+        .flip-card-front::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+            animation: rotate 15s linear infinite;
+        }
+        
+        .flip-card-front i {
+            font-size: 4.5rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 1;
+            filter: drop-shadow(0 4px 8px rgba(102, 126, 234, 0.3));
+        }
+        
+        .flip-card:hover .flip-card-front i {
+            transform: none !important;
+            filter: drop-shadow(0 4px 8px rgba(102, 126, 234, 0.3));
+        }
+        
+        .flip-card-front h6 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+        
+        .flip-card-back {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 8s ease infinite;
+            color: white;
+            transform: rotateY(180deg);
+            box-shadow: 0 15px 50px rgba(102, 126, 234, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .flip-card-back::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+            animation: pulse 6s ease-in-out infinite;
+        }
+        
+        .flip-card-back h6 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
+            margin-bottom: 15px;
+            color: var(--accent-color);
+        }
+        
+        .flip-card-back p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin: 0;
+            text-align: left;
+            opacity: 0.95;
+        }
+        
+        .flip-card:hover .flip-card-front {
+            box-shadow: var(--shadow-lg);
+        }
+        
+        /* Ensure feature row doesn't cause movement */
+        .feature-row {
+            margin-top: -30px;
+            margin-bottom: 60px;
+            justify-content: center;
+            gap: 2.5rem;
+            position: relative;
+            z-index: 1;
+            align-items: flex-start;
+        }
+
+        /* Role Cards Section */
+        .block-section {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(30px);
+            padding: 80px 0;
+            margin-top: 0;
+            margin-bottom: 60px;
+            border-radius: 40px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.3);
+            overflow: hidden;
+        }
+        
+        .block-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%),
+                repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(102, 126, 234, 0.02) 10px, rgba(102, 126, 234, 0.02) 20px);
+            border-radius: 40px;
+            z-index: -1;
+        }
+        
+        .block-section::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 15s ease-in-out infinite;
+            z-index: -1;
+        }
+        
+        .role-selection h3 {
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .role-cards {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .role-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5);
+            padding: 50px 35px;
+            width: 260px;
+            cursor: pointer;
+            min-height: 240px;
+            text-align: center;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid rgba(255,255,255,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .role-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 200% 200%;
+            opacity: 0;
+            transition: all 0.6s ease;
+            z-index: 0;
+            animation: gradientShift 8s ease infinite;
+        }
+        
+        .role-card:hover::before {
+            opacity: 1;
+            top: -30%;
+            left: -30%;
+        }
+        
+        .role-card::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.6s ease;
+            z-index: 1;
+        }
+        
+        .role-card:hover::after {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .role-card > * {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .role-card i {
+            font-size: 5rem;
+            margin-bottom: 25px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            transition: none !important;
+            filter: drop-shadow(0 4px 8px rgba(102, 126, 234, 0.3));
+            display: inline-block;
+        }
+        
+        .role-card:hover {
+            transform: translateY(-15px) scale(1.05);
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.4), 0 0 40px rgba(102, 126, 234, 0.2);
+            border-color: rgba(255,255,255,0.8);
+        }
+        
+        .role-card:hover i {
+            color: var(--accent-color);
+            -webkit-text-fill-color: var(--accent-color);
+            transform: none !important;
+            filter: drop-shadow(0 4px 8px rgba(102, 126, 234, 0.3));
+        }
+        
+        .role-card:hover h5 {
+            color: white;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .role-card h5 {
+            font-weight: 700;
+            font-size: 1.4rem;
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text-dark);
+            transition: all 0.5s ease;
+        }
+
+        /* Dashboard Section */
+        #adminDashboard {
+            max-width: 1200px;
+            margin: 50px auto 60px auto;
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 40px 50px;
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+            font-size: 1.07rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        #adminDashboard h2 {
+            text-align: center;
+            margin-bottom: 35px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .add-btn {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 0.6rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        /* Severity/queue sections */
+        .severity-section {
+            margin-bottom: 30px;
+        }
+        
+        .severity-section .severity-header {
+            background: var(--primary-gradient);
+            color: #fff;
+            padding: 16px 24px;
+            border-radius: 16px 16px 0 0;
+            font-weight: 600;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .severity-section .card {
+            box-shadow: var(--shadow-md);
+            border: none;
+            border-radius: 0 0 16px 16px;
+        }
+        
+        .table {
+            border-radius: 0 0 16px 16px;
+            overflow: hidden;
+        }
+        
+        .table thead {
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .table tbody tr {
+            transition: all 0.2s ease;
+        }
+        
+        .table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+            transform: scale(1.01);
+        }
+
+        /* Service Cards Enhancement */
+        .block-section .card {
+            border: none;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            position: relative;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .block-section .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 200% 100%;
+            transform: scaleX(0);
+            transition: transform 0.5s ease;
+            animation: gradientShift 3s ease infinite;
+        }
+        
+        .block-section .card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .block-section .card::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.6s ease;
+            z-index: 0;
+        }
+        
+        .block-section .card:hover::after {
+            width: 400px;
+            height: 400px;
+        }
+        
+        .block-section .card:hover {
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 0 25px 70px rgba(102, 126, 234, 0.3), 0 0 50px rgba(102, 126, 234, 0.2);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+        
+        .block-section .card-body {
+            padding: 2.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .block-section .card-body i {
+            transition: none !important;
+            filter: drop-shadow(0 4px 8px rgba(102, 126, 234, 0.3));
+            display: inline-block;
+        }
+        
+        .block-section .card:hover .card-body i {
+            transform: none !important;
+            filter: drop-shadow(0 4px 8px rgba(102, 126, 234, 0.3));
+        }
+        
+        /* Exclude checkmarks from card hover effects */
+        .block-section .card:hover .card-body .list-unstyled i,
+        .block-section .card:hover .card-body .bi-check-circle {
+            transform: none !important;
+            filter: none !important;
+        }
+        
+        .block-section .btn {
+            border-radius: 50px;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .block-section .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.6s ease;
+        }
+        
+        .block-section .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .block-section .btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        /* About Section Enhancement */
+        .block-section .card {
+            border-radius: 20px;
+            box-shadow: var(--shadow-md);
+            border: none;
+            overflow: hidden;
+        }
+        
+        .block-section .card-header {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 1.5rem;
+            font-weight: 600;
+        }
+        
+        /* Contact Section Cards */
+        .block-section .row .card {
+            transition: all 0.3s ease;
+        }
+        
+        .block-section .row .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        /* Responsive Fixes */
+        @media (max-width: 768px) {
+            .hero-section { 
+                padding: 50px 20px 40px 20px; 
+                border-radius: 20px;
+            }
+            .hero-section h1 {
+                font-size: 2.5rem;
+            }
+            .hero-section p {
+                font-size: 1.1rem;
+            }
+            .role-cards, .feature-row { 
+                flex-direction: column !important; 
+                gap: 25px; 
+            }
+            #adminDashboard { 
+                padding: 25px 20px;
+                border-radius: 20px;
+            }
+            .flip-card {
+                width: 100%;
+                max-width: 280px;
+            }
+            .role-card {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="#">CareQueue</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+                <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                <li class="nav-item">
+                    <button class="btn btn-outline-light btn-sm ms-3" data-bs-toggle="modal" data-bs-target="#signInModal">
+                        Sign In
+                    </button>
+                </li>
+                <li class="nav-item d-none" id="adminSignOutItem">
+                    <button class="btn btn-outline-light btn-sm ms-3" id="adminSignOutBtn">
+                        Sign Out
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<section id="home" class="hero-section shadow">
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+    <div class="container">
+        <h1>🏥 CareQueue: Healthcare Scheduling</h1>
+        <p>Streamlining patient care with smart scheduling and efficient queue management</p>
+        <div class="hero-cta mb-2">
+            <a class="btn btn-primary me-3" style="font-weight:600;" href="{{ url_for('book_appointment') }}">Book Appointment</a>
+            <a class="btn btn-outline-light" href="#about">Know More</a>
+        </div>
+        <div class="feature-row d-flex mt-5 mb-0">
+            <div class="flip-card">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <i class="bi bi-clock-history"></i>
+                        <h6>Real-time Queue Updating</h6>
+                    </div>
+                    <div class="flip-card-back">
+                        <h6>Real-time Queue Updating</h6>
+                        <p style="font-size:0.95rem;">
+                            Instantly refresh patient queues for smooth and efficient flow.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="flip-card">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <i class="bi bi-person-check"></i>
+                        <h6>Priority-based Scheduling</h6>
+                    </div>
+                    <div class="flip-card-back">
+                        <h6>Priority-based Scheduling</h6>
+                        <p style="font-size:0.95rem;">
+                            Schedule appointments by urgency for faster critical care.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="flip-card">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <i class="bi bi-patch-check-fill"></i>
+                        <h6>Appointment Tracking</h6>
+                    </div>
+                    <div class="flip-card-back">
+                        <h6>Appointment Tracking</h6>
+                        <p style="font-size:0.95rem;">
+                            Monitor and manage appointments easily and efficiently.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- Patient Services Section -->
+<section class="block-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h3 class="mb-3">Patient Services</h3>
+            <p class="text-muted">Quick access to patient services and appointment management</p>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center shadow-lg" style="border: none; border-radius: 20px; background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%); transition: all 0.3s ease;">
+                    <div class="card-body p-4">
+                        <div class="mb-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);">
+                            <i class="bi bi-calendar-plus text-white" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <h5 class="card-title mt-3 mb-2" style="font-weight: 700; color: #1e293b;">Book Appointment</h5>
+                        <p class="card-text text-muted mb-4">Schedule your medical appointment online with OTP verification</p>
+                        <a href="/book" class="btn btn-primary btn-lg px-4" style="border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                            <i class="bi bi-calendar-check me-2"></i>Book Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center shadow-lg" style="border: none; border-radius: 20px; background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%); transition: all 0.3s ease;">
+                    <div class="card-body p-4">
+                        <div class="mb-3" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);">
+                            <i class="bi bi-person-plus text-white" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <h5 class="card-title mt-3 mb-2" style="font-weight: 700; color: #1e293b;">Register Patient</h5>
+                        <p class="card-text text-muted mb-4">Register as a new patient in our system</p>
+                        <a href="/register" class="btn btn-success btn-lg px-4" style="border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                            <i class="bi bi-person-plus me-2"></i>Register
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center shadow-lg" style="border: none; border-radius: 20px; background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%); transition: all 0.3s ease;">
+                    <div class="card-body p-4">
+                        <div class="mb-3" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);">
+                            <i class="bi bi-search text-white" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <h5 class="card-title mt-3 mb-2" style="font-weight: 700; color: #1e293b;">Lookup Patient</h5>
+                        <p class="card-text text-muted mb-4">Find your patient record using mobile number or email</p>
+                        <a href="/lookup" class="btn btn-info btn-lg px-4" style="border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+                            <i class="bi bi-search me-2"></i>Lookup
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lab Services Row -->
+        <div class="row mt-4 justify-content-center">
+            <div class="col-md-6 col-lg-5 mb-4">
+                <div class="card h-100 text-center shadow-lg" style="border: none; border-radius: 20px; background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%); transition: all 0.3s ease;">
+                    <div class="card-body p-4">
+                        <div class="mb-3" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 8px 20px rgba(255, 193, 7, 0.3);">
+                            <i class="bi bi-clipboard-data text-white" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <h5 class="card-title mt-3 mb-2" style="font-weight: 700; color: #1e293b;">Upload Lab Report</h5>
+                        <p class="card-text text-muted mb-4">Upload lab results and send directly to doctor via IPC</p>
+                        <a href="/lab/upload" class="btn btn-warning btn-lg px-4" style="border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);">
+                            <i class="bi bi-upload me-2"></i>Upload Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- About Section -->
+<section id="about" class="block-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h3 class="mb-4">About CareQueue</h3>
+            <p class="lead">An Operating System-based Hospital Management System</p>
+        </div>
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Project Overview</h5>
+                        <p class="card-text">
+                            CareQueue is a comprehensive hospital management system built using operating system concepts and algorithms. 
+                            This system implements various OS algorithms to efficiently manage patient queues, resource allocation, 
+                            and scheduling in a healthcare environment.
+                        </p>
+                        
+                        <h6 class="mt-4">Operating System Concepts Implemented:</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><i class="bi bi-check-circle text-success me-2"></i><strong>Priority Scheduling:</strong> Patient queue management based on medical urgency (Severity Score 1-2)</li>
+                                    <li><i class="bi bi-check-circle text-success me-2"></i><strong>FCFS (First Come First Served):</strong> Fair scheduling for non-urgent patients</li>
+                                    <li><i class="bi bi-check-circle text-success me-2"></i><strong>Mutex-based Synchronization:</strong> Thread-safe locks using <code>threading.RLock</code> to prevent race conditions in concurrent appointments</li>
+                                    <li><i class="bi bi-check-circle text-success me-2"></i><strong>File Locking:</strong> Cross-process file locks in <code>lock_utils.py</code> guard CSV writes and prevent data corruption</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><i class="bi bi-check-circle text-success me-2"></i><strong>IPC (Inter-Process Communication):</strong> Named pipes and TCP sockets in <code>ipc_bus.py</code> for real-time lab report notifications</li>
+                                    <li><i class="bi bi-check-circle text-success me-2"></i><strong>Concurrency Control:</strong> Thread-safe critical sections coordinate queue updates and prevent simultaneous modifications</li>
+                                    <li><i class="bi bi-check-circle text-success me-2"></i><strong>Multithreaded Event Dispatch:</strong> Background daemon threads manage IPC subscribers and handle event delivery</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h6>Key Features:</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="text-center p-3">
+                                        <i class="bi bi-clock-history text-primary" style="font-size: 2rem;"></i>
+                                        <h6 class="mt-2">Real-time Queue Management</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center p-3">
+                                        <i class="bi bi-shield-check text-success" style="font-size: 2rem;"></i>
+                                        <h6 class="mt-2">Secure OTP Authentication</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center p-3">
+                                        <i class="bi bi-graph-up text-info" style="font-size: 2rem;"></i>
+                                        <h6 class="mt-2">Performance Optimization</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Section -->
+<section id="contact" class="block-section" style="background: #f8f9fa;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h3 class="mb-4">Contact Us</h3>
+            <p class="lead">Get in touch with our team</p>
+        </div>
+        <div class="container pt-5 pb-2">
+<div class="row g-3">
+
+  <!-- Email Support -->
+  <div class="col-md-6">
+    <div class="card h-100 text-center" style="min-height: 230px;">
+      <div class="card-body d-flex flex-column justify-content-center">
+        <i class="bi bi-envelope-open text-primary" style="font-size: 2.5rem"></i>
+        <h5 class="card-title mt-3">Email Support</h5>
+        <p class="mb-0">carequeueclinic@gmail.com</p>
+        <p>drpatelclinic@gmail.com</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phone Support -->
+  <div class="col-md-6">
+    <div class="card h-100 text-center" style="min-height: 230px;">
+      <div class="card-body d-flex flex-column justify-content-center">
+        <i class="bi bi-telephone-forward text-success" style="font-size: 2.5rem"></i>
+        <h5 class="card-title mt-3">Phone Support</h5>
+        <p class="mb-0">+91 98765 43210</p>
+        <p>+91 78901 23456</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clinic Address -->
+  <div class="col-md-6">
+    <div class="card h-100 text-center" style="min-height: 230px;">
+      <div class="card-body d-flex flex-column justify-content-center">
+        <i class="bi bi-geo-alt text-warning" style="font-size: 2.5rem"></i>
+        <h5 class="card-title mt-3">Clinic Address</h5>
+        <p class="mb-0">
+          Patel Health Clinic,<br>
+          12 Main Bazaar, Indirapuram,<br>
+          Ghaziabad, UP - 201014
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Operating Hours -->
+  <div class="col-md-6">
+    <div class="card h-100 text-center" style="min-height: 230px;">
+      <div class="card-body d-flex flex-column justify-content-center">
+        <i class="bi bi-clock text-info" style="font-size: 2.5rem;"></i>
+        <h5 class="card-title mt-3">Operating Hours</h5>
+        <p class="card-text">Monday - Friday: 8:00 AM - 6:00 PM<br>Saturday: 9:00 AM - 4:00 PM<br>Sunday: Emergency Only</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Technical Support Section -->
+<div class="text-center mt-4">
+    <div class="fw-bold">Technical Support</div>
+    <div class="mb-1">For technical issues or system support, please contact our IT support at:</div>
+    <div class="fw-bold">
+      <a href="mailto:tech@carequeueclinic.com" class="text-dark" style="text-decoration:underline;">tech@carequeueclinic.com</a> | +91 99887 65432
+    </div>
+</div>
+
+  </div>
+</div>
+
+</section>
+
+<!-- Administrator Dashboard Section (Hidden by Default) -->
+<div id="adminDashboard">
+    <h2>Hospital Administrator Dashboard</h2>
+    <!-- Flash Message (Success Alerts) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="alert alert-{{ category if category else 'success' }} text-center" role="alert">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <!-- Header Info -->
+    <div class="d-flex justify-content-between mb-3">
+        <div>
+            <strong>Total Patients:</strong> {{ total_patients }} <br />
+            <strong>Active Consultations:</strong> {{ active_consultations }}
+        </div>
+        <div class="d-flex gap-2">
+            <form action="{{ url_for('call_next') }}" method="POST">
+                <button type="submit" class="btn btn-success">🔔 Call Next Patient</button>
+            </form>
+            <button class="btn add-btn" data-bs-toggle="modal" data-bs-target="#addPatientModal">
+                ➕ Add / Update Patient
+            </button>
+        </div>
+    </div>
+    <!-- Two Queues: Priority and FCFS -->
+    {% set priority_queue = queues.get('priority', []) %}
+    {% set fcfs_queue = queues.get('fcfs', []) %}
+    <div class="severity-section">
+        <div class="severity-header">
+            <h5 class="mb-0">Priority Queue — {{ severity_counts['priority'] }} Patients</h5>
+        </div>
+        <div class="card mt-2">
+            <div class="card-body">
+                {% if priority_queue %}
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Patient ID</th>
+                            <th>Reason for Visit</th>
+                            <th>Status</th>
+                            <th>Est. Wait (min)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for patient in priority_queue %}
+                        <tr>
+                            <td>{{ patient.patient_id }}</td>
+                            <td>{{ patient.reason_for_visit }}</td>
+                            <td>{{ patient.status }}</td>
+                            <td>{{ "%.1f"|format(patient.Estimated_Wait_Time) }}</td>
+                            <td>
+                                {% if patient.status|lower == 'scheduled' %}
+                                <form action="/start_consultation" method="POST" class="d-inline">
+                                    <input type="hidden" name="appointment_id" value="{{ patient.appointment_id }}" />
+                                    <button type="submit" class="btn btn-sm btn-success">In Session</button>
+                                </form>
+                                {% elif patient.status|lower == 'in-session' %}
+                                <form action="/complete_consultation" method="POST" class="d-inline">
+                                    <input type="hidden" name="appointment_id" value="{{ patient.appointment_id }}" />
+                                    <button type="submit" class="btn btn-sm btn-danger">Done</button>
+                                </form>
+                                {% else %}
+                                <span class="badge bg-secondary">Completed</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-muted mb-0">No patients in the priority queue.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="severity-section mt-4">
+        <div class="severity-header">
+            <h5 class="mb-0">FCFS Queue — {{ severity_counts['fcfs'] }} Patients</h5>
+        </div>
+        <div class="card mt-2">
+            <div class="card-body">
+                {% if fcfs_queue %}
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Patient ID</th>
+                            <th>Reason for Visit</th>
+                            <th>Status</th>
+                            <th>Est. Wait (min)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for patient in fcfs_queue %}
+                        <tr>
+                            <td>{{ patient.patient_id }}</td>
+                            <td>{{ patient.reason_for_visit }}</td>
+                            <td>{{ patient.status }}</td>
+                            <td>{{ "%.1f"|format(patient.Estimated_Wait_Time) }}</td>
+                            <td>
+                                {% if patient.status|lower == 'scheduled' %}
+                                <form action="/start_consultation" method="POST" class="d-inline">
+                                    <input type="hidden" name="appointment_id" value="{{ patient.appointment_id }}" />
+                                    <button type="submit" class="btn btn-sm btn-success">In Session</button>
+                                </form>
+                                {% elif patient.status|lower == 'in-session' %}
+                                <form action="/complete_consultation" method="POST" class="d-inline">
+                                    <input type="hidden" name="appointment_id" value="{{ patient.appointment_id }}" />
+                                    <button type="submit" class="btn btn-sm btn-danger">Done</button>
+                                </form>
+                                {% else %}
+                                <span class="badge bg-secondary">Completed</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-muted mb-0">No patients in the FCFS queue.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add / Update Patient Modal (same as original) -->
+<div class="modal fade" id="addPatientModal" tabindex="-1" aria-labelledby="addPatientModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="{{ url_for('add_patient') }}" method="POST">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addPatientModalLabel">Add or Update Patient</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="is_existing" class="form-label">Is this an existing patient?</label>
+            <select class="form-select" id="is_existing" name="is_existing" required>
+              <option value="no" selected>No (New Patient)</option>
+              <option value="yes">Yes (Update Severity)</option>
+            </select>
+          </div>
+          <!-- New Patient Fields -->
+          <div id="new_patient_fields">
+            <div class="mb-3">
+              <label for="patient_id" class="form-label">Patient ID</label>
+              <input type="text" class="form-control" id="patient_id" name="patient_id" required />
+            </div>
+            <div class="mb-3">
+              <label for="appointment_id" class="form-label">Appointment ID</label>
+              <input type="text" class="form-control" id="appointment_id" name="appointment_id" required />
+            </div>
+            <div class="mb-3">
+              <label for="appointment_date" class="form-label">Appointment Date</label>
+              <input type="date" class="form-control" id="appointment_date" name="appointment_date" required />
+            </div>
+            <div class="mb-3">
+              <label for="appointment_time" class="form-label">Appointment Time</label>
+              <input type="time" class="form-control" id="appointment_time" name="appointment_time" required />
+            </div>
+            <div class="mb-3">
+              <label for="doctor_id" class="form-label">Doctor ID (Optional - will auto-assign if left blank)</label>
+              <input type="text" class="form-control" id="doctor_id" name="doctor_id" placeholder="e.g., D001" />
+              <small class="text-muted">Leave blank to auto-assign a doctor</small>
+            </div>
+          </div>
+          <!-- Existing Patient Fields -->
+          <div id="existing_patient_field" style="display: none;">
+            <div class="mb-3">
+              <label for="existing_patient_id" class="form-label">Existing Patient ID</label>
+              <input type="text" class="form-control" id="existing_patient_id" name="existing_patient_id" />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="reason_for_visit" class="form-label">Reason for Visit / Update</label>
+            <textarea class="form-control" id="reason_for_visit" name="reason_for_visit" rows="2" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn add-btn">Submit</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Sign In Modal -->
+<div class="modal fade" id="signInModal" tabindex="-1" aria-labelledby="signInModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <form id="signInForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="signInModalLabel">Sign In - Select Your Role</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Role Selection -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">Select Your Role to Sign In</h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="card role-option" data-role="admin" style="cursor: pointer; border: 2px solid #e9ecef;">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-shield-lock-fill text-primary" style="font-size: 2rem;"></i>
+                                        <h6 class="mt-2">Hospital Administrator</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card role-option" data-role="doctor" style="cursor: pointer; border: 2px solid #e9ecef;">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-person-badge text-success" style="font-size: 2rem;"></i>
+                                        <h6 class="mt-2">Doctor</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card role-option" data-role="patient" style="cursor: pointer; border: 2px solid #e9ecef;">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-person-circle text-info" style="font-size: 2rem;"></i>
+                                        <h6 class="mt-2">Patient</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sign In Form (Hidden by default) -->
+                    <div id="signInFormFields" style="display: none;">
+                    <div class="mb-3">
+                        <label for="signinEmail" class="form-label">Email address</label>
+                        <input type="email" class="form-control" id="signinEmail" placeholder="name@example.com" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="signinPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="signinPassword" placeholder="Password" required />
+                        </div>
+                    </div>
+                    
+                    <!-- Role-specific ID Input -->
+                    <div id="roleIdInput" style="display: none;">
+                        <div class="mb-3">
+                            <label for="roleId" class="form-label" id="roleIdLabel">Enter your ID</label>
+                            <input type="text" class="form-control" id="roleId" placeholder="Enter your ID" required />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="proceedBtn" style="display: none;">Proceed</button>
+                    <button type="submit" class="btn add-btn" id="signInBtn" style="display: none;">Sign In</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const adminDashboard = document.getElementById("adminDashboard");
+    const signInModal = new bootstrap.Modal(document.getElementById('signInModal'));
+    let selectedRole = null;
+    let awaitingAdminSignIn = false;
+
+    // Role selection in modal
+    const roleOptions = document.querySelectorAll('.role-option');
+    const signInFormFields = document.getElementById('signInFormFields');
+    const roleIdInput = document.getElementById('roleIdInput');
+    const roleIdLabel = document.getElementById('roleIdLabel');
+    const roleId = document.getElementById('roleId');
+    const proceedBtn = document.getElementById('proceedBtn');
+    const signInBtn = document.getElementById('signInBtn');
+
+    roleOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove active class from all options
+            roleOptions.forEach(opt => {
+                opt.style.borderColor = '#e9ecef';
+                opt.style.backgroundColor = 'white';
+            });
+            
+            // Add active class to selected option
+            this.style.borderColor = '#4f3cc9';
+            this.style.backgroundColor = '#f8f9ff';
+            
+            selectedRole = this.dataset.role;
+            
+            // Show appropriate input based on role
+            if (selectedRole === 'admin') {
+                signInFormFields.style.display = 'block';
+                roleIdInput.style.display = 'none';
+                proceedBtn.style.display = 'none';
+                signInBtn.style.display = 'inline-block';
+            } else {
+                signInFormFields.style.display = 'none';
+                roleIdInput.style.display = 'block';
+                proceedBtn.style.display = 'inline-block';
+                signInBtn.style.display = 'none';
+                
+                if (selectedRole === 'doctor') {
+                    roleIdLabel.textContent = 'Enter your Doctor ID:';
+                    roleId.placeholder = 'e.g., D001, D002';
+                } else if (selectedRole === 'patient') {
+                    roleIdLabel.textContent = 'Enter your Patient ID:';
+                    roleId.placeholder = 'e.g., P001, P002';
+                }
+            }
+        });
+    });
+
+    // Proceed button for doctor/patient - redirect to login pages
+    proceedBtn.addEventListener('click', function() {
+        if (selectedRole === 'doctor') {
+            const doctorId = roleId.value.trim();
+            if (doctorId) {
+                window.location.href = "/doctor/login?doctor_id=" + encodeURIComponent(doctorId);
+            }
+        } else if (selectedRole === 'patient') {
+            const patientId = roleId.value.trim();
+            if (patientId) {
+                window.location.href = "/patient/login?patient_id=" + encodeURIComponent(patientId);
+            }
+        }
+    });
+
+    // Admin sign-in form submission
+    document.getElementById("signInForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        const email = document.getElementById('signinEmail').value;
+        const password = document.getElementById('signinPassword').value;
+        
+        if (selectedRole === 'admin') {
+            // For admin, just redirect (no authentication check for now)
+            // In production, you'd verify credentials here
+            if (email && password) {
+                window.location.href = "/admin";
+            } else {
+                alert('Please enter email and password');
+            }
+        } else {
+            signInModal.hide();
+        }
+    });
+
+    // Navbar scroll effect
+    window.addEventListener('scroll', function() {
+        const navbar = document.querySelector('.navbar');
+        if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    });
+
+    // Smooth scrolling for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    // Restore admin sign-in state on reload
+    try {
+        const isAdmin = sessionStorage.getItem('isAdminSignedIn') === 'true';
+        if (isAdmin) {
+            adminDashboard.style.display = "block";
+            const signOutItem = document.getElementById('adminSignOutItem');
+            if (signOutItem) signOutItem.classList.remove('d-none');
+        } else {
+            adminDashboard.style.display = "none";
+        }
+    } catch (err) {
+        adminDashboard.style.display = "none";
+    }
+
+    // Admin Sign Out clears session and hides dashboard
+    const adminSignOutBtn = document.getElementById('adminSignOutBtn');
+    if (adminSignOutBtn) {
+        adminSignOutBtn.addEventListener('click', function() {
+            try { sessionStorage.removeItem('isAdminSignedIn'); } catch (err) {}
+            const signOutItem = document.getElementById('adminSignOutItem');
+            if (signOutItem) signOutItem.classList.add('d-none');
+            adminDashboard.style.display = "none";
+        });
+    }
+
+    // Patient Modal fields toggle
+    const select = document.getElementById("is_existing");
+    const newFields = document.getElementById("new_patient_fields");
+    const existingField = document.getElementById("existing_patient_field");
+
+    function toggleFields() {
+        const isExisting = select.value === "yes";
+        newFields.style.display = isExisting ? "none" : "block";
+        existingField.style.display = isExisting ? "block" : "none";
+        newFields.querySelectorAll("input").forEach(input => {
+            if (isExisting) {
+                input.removeAttribute("required");
+            } else {
+                input.setAttribute("required", "required");
+            }
+        });
+        existingField.querySelectorAll("input").forEach(input => {
+            if (isExisting) {
+                input.setAttribute("required", "required");
+            } else {
+                input.removeAttribute("required");
+            }
+        });
+    }
+    toggleFields();
+    select.addEventListener("change", toggleFields);
+});
+</script>
+</body>
+</html>

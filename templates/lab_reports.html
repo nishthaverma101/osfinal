@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lab Reports - Hospital Management System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    body { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .reports-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      margin: 30px auto;
+      max-width: 1400px;
+    }
+    .report-card {
+      background: #f8f9fa;
+      border-radius: 15px;
+      padding: 20px;
+      margin: 15px 0;
+      border-left: 4px solid #667eea;
+      transition: all 0.3s ease;
+    }
+    .report-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    .report-card.critical {
+      border-left-color: #dc3545;
+      background: #fff5f5;
+    }
+    .report-card.high {
+      border-left-color: #fd7e14;
+      background: #fff8f0;
+    }
+    .report-card.normal {
+      border-left-color: #28a745;
+      background: #f8fff8;
+    }
+    .section-title {
+      color: #2c3e50;
+      font-weight: 700;
+      margin-bottom: 30px;
+    }
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .status-pending { background: #e3f2fd; color: #1976d2; }
+    .status-completed { background: #e8f5e8; color: #2e7d32; }
+    .status-in-progress { background: #fff3e0; color: #f57c00; }
+    .status-cancelled { background: #ffebee; color: #d32f2f; }
+    .priority-badge {
+      padding: 4px 8px;
+      border-radius: 15px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .priority-critical { background: #ffebee; color: #d32f2f; }
+    .priority-high { background: #fff3e0; color: #f57c00; }
+    .priority-normal { background: #e8f5e8; color: #2e7d32; }
+    .filter-card {
+      background: #f8f9fa;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="reports-container">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="section-title">
+          <i class="fas fa-clipboard-list me-2"></i>Lab Reports
+        </h2>
+        <div>
+          <a href="/lab/upload" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Upload New Report
+          </a>
+          <a href="/" class="btn btn-outline-secondary">
+            <i class="fas fa-home me-2"></i>Home
+          </a>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-card">
+        <h5><i class="fas fa-filter me-2"></i>Filters</h5>
+        <form method="GET" class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Patient</label>
+            <select name="patient_id" class="form-select">
+              <option value="">All Patients</option>
+              {% for patient in patients %}
+              <option value="{{ patient.patient_id }}" 
+                      {% if current_filters.patient_id == patient.patient_id %}selected{% endif %}>
+                {{ patient.patient_id }} - {{ patient.first_name }} {{ patient.last_name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Doctor</label>
+            <select name="doctor_id" class="form-select">
+              <option value="">All Doctors</option>
+              {% for doctor in doctors %}
+              <option value="{{ doctor.doctor_id }}" 
+                      {% if current_filters.doctor_id == doctor.doctor_id %}selected{% endif %}>
+                {{ doctor.doctor_id }} - Dr. {{ doctor.first_name }} {{ doctor.last_name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Priority</label>
+            <select name="priority" class="form-select">
+              <option value="">All Priorities</option>
+              <option value="Normal" {% if current_filters.priority == 'Normal' %}selected{% endif %}>Normal</option>
+              <option value="High" {% if current_filters.priority == 'High' %}selected{% endif %}>High</option>
+              <option value="Critical" {% if current_filters.priority == 'Critical' %}selected{% endif %}>Critical</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+              <option value="">All Statuses</option>
+              <option value="Pending" {% if current_filters.status == 'Pending' %}selected{% endif %}>Pending</option>
+              <option value="In Progress" {% if current_filters.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+              <option value="Completed" {% if current_filters.status == 'Completed' %}selected{% endif %}>Completed</option>
+              <option value="Cancelled" {% if current_filters.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">&nbsp;</label>
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search me-1"></i>Filter
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      {% if reports %}
+        <div class="row">
+          {% for report in reports %}
+          <div class="col-md-6 mb-4">
+            <div class="report-card {{ report.priority.lower() if report.priority else 'normal' }}">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                  <h6 class="mb-1">
+                    <i class="fas fa-vial me-2"></i>{{ report.test_name }}
+                  </h6>
+                  <small class="text-muted">Report ID: {{ report.report_id }}</small>
+                </div>
+                <div class="text-end">
+                  <span class="status-badge status-{{ report.status.lower().replace(' ', '-') }}">
+                    {{ report.status }}
+                  </span>
+                  <br>
+                  <span class="priority-badge priority-{{ report.priority.lower() if report.priority else 'normal' }}">
+                    {{ report.priority if report.priority else 'Normal' }}
+                  </span>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <div class="row">
+                  <div class="col-6">
+                    <strong>Patient:</strong><br>
+                    {{ report.first_name }} {{ report.last_name }}<br>
+                    <small class="text-muted">{{ report.patient_id }}</small>
+                  </div>
+                  <div class="col-6">
+                    <strong>Doctor:</strong><br>
+                    Dr. {{ report.first_name_y if report.first_name_y else 'Unknown' }} {{ report.last_name_y if report.last_name_y else 'Doctor' }}<br>
+                    <small class="text-muted">{{ report.doctor_id }}</small>
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <strong>Date:</strong> {{ report.date }}<br>
+                  {% if report.created_at %}
+                  <strong>Created:</strong> {{ report.created_at }}
+                  {% endif %}
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <strong>Result:</strong>
+                <div class="mt-2 p-3 bg-white rounded" style="border: 1px solid #dee2e6;">
+                  {{ report.result }}
+                </div>
+              </div>
+              
+              {% if report.notes %}
+              <div class="mb-3">
+                <strong>Notes:</strong>
+                <div class="mt-2 p-2 bg-light rounded">
+                  {{ report.notes }}
+                </div>
+              </div>
+              {% endif %}
+              
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-success" onclick="markAsCompleted('{{ report.report_id }}')">
+                  <i class="fas fa-check me-1"></i>Mark Complete
+                </button>
+                <button class="btn btn-sm btn-primary" onclick="viewPatient('{{ report.patient_id }}')">
+                  <i class="fas fa-user me-1"></i>View Patient
+                </button>
+                <button class="btn btn-sm btn-info" onclick="downloadReport('{{ report.report_id }}')">
+                  <i class="fas fa-download me-1"></i>Download
+                </button>
+                <button class="btn btn-sm btn-warning" onclick="sendToDoctor('{{ report.report_id }}', '{{ report.doctor_id }}')">
+                  <i class="fas fa-paper-plane me-1"></i>Send to Doctor
+                </button>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-5">
+          <i class="fas fa-clipboard-list fa-4x text-muted mb-3"></i>
+          <h4 class="text-muted">No Lab Reports Found</h4>
+          <p class="text-muted">No lab reports match your current filters.</p>
+          <a href="/lab/upload" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Upload New Report
+          </a>
+        </div>
+      {% endif %}
+
+      <!-- Statistics -->
+      {% if reports %}
+      <div class="mt-5">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Report Statistics</h5>
+          </div>
+          <div class="card-body">
+            <div class="row text-center">
+              <div class="col-md-3">
+                <h4 class="text-primary">{{ reports|length }}</h4>
+                <small class="text-muted">Total Reports</small>
+              </div>
+              <div class="col-md-3">
+                <h4 class="text-success">{{ reports|selectattr('status', 'equalto', 'Completed')|list|length }}</h4>
+                <small class="text-muted">Completed</small>
+              </div>
+              <div class="col-md-3">
+                <h4 class="text-warning">{{ reports|selectattr('status', 'equalto', 'Pending')|list|length }}</h4>
+                <small class="text-muted">Pending</small>
+              </div>
+              <div class="col-md-3">
+                <h4 class="text-danger">{{ reports|selectattr('priority', 'equalto', 'Critical')|list|length }}</h4>
+                <small class="text-muted">Critical</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function markAsCompleted(reportId) {
+      if (confirm('Mark this report as completed?')) {
+        // In a real system, this would make an API call
+        alert('Report marked as completed!');
+        location.reload();
+      }
+    }
+    
+    function viewPatient(patientId) {
+      window.open(`/patient/${patientId}`, '_blank');
+    }
+    
+    function downloadReport(reportId) {
+      // In a real system, this would generate and download a PDF
+      alert('Downloading report...');
+    }
+    
+    function sendToDoctor(reportId, doctorId) {
+      if (confirm('Send this report to the doctor via IPC?')) {
+        // In a real system, this would make an API call
+        fetch('/lab/send_to_doctor', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `report_id=${reportId}&doctor_id=${doctorId}&patient_id=${patientId}`
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Report sent to doctor successfully!');
+          } else {
+            alert('Error: ' + data.message);
+          }
+        })
+        .catch(error => {
+          alert('Error sending report: ' + error);
+        });
+      }
+    }
+  </script>
+</body>
+</html>
+
+
+
+

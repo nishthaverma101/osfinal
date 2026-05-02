@@ -1,0 +1,5 @@
+notification_id,recipient_type,recipient_id,notification_type,title,message,report_id,is_read,created_at
+N10001,doctor,D001,lab_report,New Lab Report: blood test,Lab report for patient Emily Miller is ready. Test: blood test,R1007,True,2025-11-09 10:59:03
+N10002,patient,P048,lab_report,Your Lab Report: blood test,Your lab test results for blood test are now available.,R1007,True,2025-11-09 10:59:03
+N10003,doctor,D001,lab_report,New Lab Report: Blood test,Lab report for patient sebastian whitmore is ready. Test: Blood test,R1008,True,2025-11-09 12:33:50
+N10004,patient,P052,lab_report,Your Lab Report: Blood test,Your lab test results for Blood test are now available.,R1008,True,2025-11-09 12:33:50
